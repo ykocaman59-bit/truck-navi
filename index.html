@@ -2,62 +2,66 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>TIRNAV - Tırların Yol Arkadaşı</title>
     <!-- Leaflet Harita Kütüphanesi -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        body { background: #070e1b; color: #fff; display: flex; height: 100vh; overflow: hidden; }
+        body { background: #070e1b; color: #fff; display: flex; flex-direction: column; height: 100vh; width: 100vw; overflow: hidden; }
 
-        /* Sol Sidebar / Telefon Çerçevesi Simülasyonu */
-        #sidebar { width: 400px; background: #0c162d; border-right: 1px solid #1e293b; display: flex; flex-direction: column; justify-content: space-between; z-index: 1000; box-shadow: 10px 0 30px rgba(0,0,0,0.5); }
+        /* Harita Arkada Tam Ekran Olsun */
+        #map { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+
+        /* Arayüz Katmanı (Haritanın Üzerinde Yüzen Panel) */
+        #ui-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; display: flex; flex-direction: column; pointer-events: none; }
         
-        .header { padding: 20px; text-align: center; background: #111d38; border-bottom: 1px solid #1e293b; }
-        .header h1 { color: #38bdf8; font-size: 22px; font-weight: 800; letter-spacing: 1px; }
-        .header p { color: #94a3b8; font-size: 12px; margin-top: 4px; }
+        .interactive { pointer-events: auto; }
 
-        .content-area { padding: 20px; overflow-y: auto; flex-grow: 1; display: flex; flex-direction: column; gap: 15px; }
+        /* Üst Başlık */
+        .header { background: rgba(12, 22, 45, 0.95); padding: 12px; text-align: center; border-bottom: 1px solid #1e293b; backdrop-filter: blur(5px); }
+        .header h1 { color: #38bdf8; font-size: 18px; font-weight: 800; letter-spacing: 1px; }
+        .header p { color: #94a3b8; font-size: 10px; }
 
-        .screen { display: none; flex-direction: column; gap: 15px; }
+        /* İçerik Alanı */
+        .content-area { flex-grow: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+
+        .screen { display: none; flex-direction: column; gap: 12px; height: 100%; }
         .screen.active { display: flex; }
 
-        .card { background: #111d38; border: 1px solid #1e293b; border-radius: 12px; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
-        .card-title { font-size: 14px; font-weight: bold; color: #38bdf8; display: flex; align-items: center; gap: 8px; }
+        .card { background: rgba(17, 29, 56, 0.9); backdrop-filter: blur(8px); border: 1px solid #1e293b; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+        .card-title { font-size: 13px; font-weight: bold; color: #38bdf8; display: flex; align-items: center; gap: 6px; }
 
-        label { font-size: 12px; color: #94a3b8; }
-        input, select { padding: 12px; border-radius: 8px; border: 1px solid #334155; background: #070e1b; color: #fff; font-size: 14px; outline: none; }
-        input:focus { border-color: #38bdf8; }
+        label { font-size: 11px; color: #94a3b8; }
+        input, select { padding: 10px; border-radius: 8px; border: 1px solid #334155; background: #070e1b; color: #fff; font-size: 13px; outline: none; width: 100%; }
+        
+        .btn-primary { background: linear-gradient(135deg, #0284c7, #0369a1); color: white; border: none; padding: 12px; border-radius: 10px; font-size: 14px; font-weight: bold; cursor: pointer; text-align: center; box-shadow: 0 4px 12px rgba(2, 132, 199, 0.4); width: 100%; }
 
-        .btn-primary { background: linear-gradient(135deg, #0284c7, #0369a1); color: white; border: none; padding: 14px; border-radius: 10px; font-size: 15px; font-weight: bold; cursor: pointer; text-align: center; box-shadow: 0 4px 12px rgba(2, 132, 199, 0.4); transition: 0.2s; }
-        .btn-primary:hover { opacity: 0.9; }
+        /* Navigasyon HUD Paneli (Üst Bilgi) */
+        .hud-top { background: rgba(15, 23, 42, 0.95); padding: 10px 15px; border-radius: 10px; border: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; }
+        .hud-bottom { background: rgba(15, 23, 42, 0.95); padding: 10px; border-radius: 10px; border: 1px solid #334155; display: flex; justify-content: space-around; text-align: center; margin-top: auto; }
+        .hud-stat span:first-child { font-size: 10px; color: #94a3b8; }
+        .hud-stat span:last-child { font-size: 15px; font-weight: bold; color: #38bdf8; }
 
-        /* Navigasyon HUD Paneli (Görsel 2/8 Benzeri) */
-        .hud-top { background: rgba(15, 23, 42, 0.9); padding: 12px; border-radius: 10px; border: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; }
-        .hud-bottom { background: rgba(15, 23, 42, 0.9); padding: 12px; border-radius: 10px; border: 1px solid #334155; display: flex; justify-content: space-around; text-align: center; }
-        .hud-stat { display: flex; flex-direction: column; gap: 2px; }
-        .hud-stat span:first-child { font-size: 11px; color: #94a3b8; }
-        .hud-stat span:last-child { font-size: 16px; font-weight: bold; color: #38bdf8; }
+        /* Alt Menü Çubuğu */
+        .nav-bar { display: flex; justify-content: space-around; background: rgba(9, 16, 31, 0.95); border-top: 1px solid #1e293b; padding: 8px 0; backdrop-filter: blur(10px); margin-top: auto; }
+        .nav-item { background: none; border: none; color: #64748b; font-size: 10px; display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; }
+        .nav-item.active { color: #38bdf8; }
+        .nav-item svg { width: 18px; height: 18px; fill: currentColor; }
 
-        /* Alt Navigasyon Menüsü (Görseldeki İkonlar) */
-        .nav-bar { display: flex; justify-content: space-around; background: #09101f; border-top: 1px solid #1e293b; padding: 10px 0; }
-        .nav-item { background: none; border: none; color: #64748b; font-size: 10px; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; transition: 0.2s; }
-        .nav-item.active, .nav-item:hover { color: #38bdf8; }
-        .nav-item svg { width: 20px; height: 20px; fill: currentColor; }
-
-        /* Harita Alanı */
-        #map { flex-grow: 1; height: 100%; }
-
-        /* Toggle Anahtar */
-        .toggle-row { display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: #cbd5e1; }
-        input[type="checkbox"] { width: 40px; height: 20px; accent-color: #38bdf8; cursor: pointer; }
+        .toggle-row { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: #cbd5e1; }
+        input[type="checkbox"] { width: 35px; height: 18px; accent-color: #38bdf8; }
     </style>
 </head>
 <body>
 
-    <!-- SOL KONTROL PANELİ (UYGULAMA ARAYÜZÜ) -->
-    <div id="sidebar">
-        <div class="header">
+    <!-- ARKADA TAM EKRAN HARİTA -->
+    <div id="map"></div>
+
+    <!-- ÖNDE MOBİL ARAYÜZ KAPSAYICISI -->
+    <div id="ui-container">
+        
+        <div class="header interactive">
             <h1>TIRNAV</h1>
             <p>Tırların Yol Arkadaşı</p>
         </div>
@@ -66,71 +70,65 @@
             
             <!-- EKRAN 1: ANA SAYFA -->
             <div id="screen-home" class="screen active">
-                <div class="card">
+                <div class="card interactive">
                     <div class="card-title">📍 Rota Planlama</div>
-                    <div style="display: flex; flex-direction: column; gap: 8px;">
-                        <label>Mevcut Konum (Boylam, Enlem)</label>
-                        <input type="text" id="start" value="29.2642, 40.9850">
-                        
-                        <label>Varış Noktası (Boylam, Enlem)</label>
-                        <input type="text" id="end" value="29.9206, 40.7656" placeholder="Örn: 29.9206, 40.7656">
-                    </div>
+                    <label>Mevcut Konum (Boylam, Enlem)</label>
+                    <input type="text" id="start" value="29.2642, 40.9850">
+                    
+                    <label>Varış Noktası (Boylam, Enlem)</label>
+                    <input type="text" id="end" value="29.9206, 40.7656">
                 </div>
 
-                <div class="card">
+                <div class="card interactive">
                     <div class="card-title">🚛 Aktif Araç Profili</div>
-                    <div style="font-size: 13px; color: #cbd5e1; display: flex; flex-direction: column; gap: 4px;">
+                    <div style="font-size: 12px; color: #cbd5e1; display: flex; flex-direction: column; gap: 3px;">
                         <div>Tür: <b>Çekici + Dorse</b></div>
-                        <div>Yükseklik: <<b>4.00 m</b></div>
-                        <div>Ağırlık: <b>40.0 ton</b></div>
+                        <div>Yükseklik: <b>4.00 m</b> | Ağırlık: <b>40.0 ton</b></div>
                     </div>
                 </div>
 
-                <button class="btn-primary" onclick="calculateRoute()">Rota Oluştur</button>
+                <button class="btn-primary interactive" onclick="calculateRoute()">Rota Oluştur</button>
             </div>
 
             <!-- EKRAN 2: NAVİGASYON / HARİTA GÖRÜNÜMÜ -->
             <div id="screen-nav" class="screen">
-                <div class="hud-top">
-                    <div style="font-weight: bold; font-size: 14px; color: #38bdf8;">⬆ 1.2 km sonra dön</div>
-                    <div style="background: #0284c7; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: bold;">Otoyol (O-7)</div>
+                <div class="hud-top interactive">
+                    <div style="font-weight: bold; font-size: 13px; color: #38bdf8;">⬆ 1.2 km sonra dön</div>
+                    <div style="background: #0284c7; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: bold;">Otoyol (O-7)</div>
                 </div>
 
-                <div class="card" style="background: rgba(15, 23, 42, 0.6); border-color: #0284c7;">
+                <div class="card interactive" style="background: rgba(15, 23, 42, 0.8);">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <div style="font-size: 32px; font-weight: 800; color: #34d399;">82 <span style="font-size: 12px; color: #94a3b8;">km/s</span></div>
-                        <div style="text-align: right; font-size: 12px; color: #94a3b8;">Gabari Koruması Aktif</div>
+                        <div style="font-size: 28px; font-weight: 800; color: #34d399;">82 <span style="font-size: 11px; color: #94a3b8;">km/s</span></div>
+                        <div style="text-align: right; font-size: 11px; color: #38bdf8;">Gabari Koruması Aktif</div>
                     </div>
                 </div>
 
-                <div class="hud-bottom">
+                <div class="hud-bottom interactive">
                     <div class="hud-stat"><span>Kalan Mesafe</span><span id="nav-dist">-- km</span></div>
                     <div class="hud-stat"><span>Tahmini Süre</span><span id="nav-time">-- saat</span></div>
                     <div class="hud-stat"><span>Varış Zamanı</span><span>19:37</span></div>
                 </div>
 
-                <button class="btn-primary" style="background: #ef4444;" onclick="switchScreen('home')">Rotayı Bitir</button>
+                <button class="btn-primary interactive" style="background: #ef4444;" onclick="switchScreen('home')">Rotayı Bitir</button>
             </div>
 
             <!-- EKRAN 5: ARAÇ PROFİLİ -->
             <div id="screen-profile" class="screen">
-                <div class="card">
+                <div class="card interactive">
                     <div class="card-title">⚙️ Araç Fiziksel Ölçüleri</div>
                     <label>Yükseklik (Metre)</label>
                     <input type="number" id="height" value="4.0" step="0.1">
 
                     <label>Ağırlık (Ton)</label>
                     <input type="number" id="weight" value="40.0" step="1">
-
-                    <label>Genişlik (Metre)</label>
-                    <input type="text" value="2.55">
                 </div>
-                <button class="btn-primary" onclick="alert('Araç profili kaydedildi!')">Kaydet</button>
+                <button class="btn-primary interactive" onclick="alert('Araç profili kaydedildi!')">Kaydet</button>
             </div>
 
             <!-- EKRAN 7: AYARLAR -->
             <div id="screen-settings" class="screen">
-                <div class="card">
+                <div class="card interactive">
                     <div class="card-title">🔧 Uygulama Ayarları</div>
                     <div class="toggle-row">
                         <span>Navigasyon Sesleri</span>
@@ -140,17 +138,13 @@
                         <span>Gece Modu (Koyu)</span>
                         <input type="checkbox" checked>
                     </div>
-                    <div class="toggle-row">
-                        <span>Köprü/Gabari Uyarıları</span>
-                        <input type="checkbox" checked>
-                    </div>
                 </div>
             </div>
 
         </div>
 
-        <!-- ALT MENÜ ÇUBUĞU (Görseldeki İkonlar) -->
-        <div class="nav-bar">
+        <!-- ALT MENÜ ÇUBUĞU -->
+        <div class="nav-bar interactive">
             <button class="nav-item active" onclick="switchScreen('home')">
                 <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
                 Ana Sayfa
@@ -168,29 +162,25 @@
                 Ayarlar
             </button>
         </div>
-    </div>
 
-    <!-- SAĞ TARAF: HARİTA EKRANI -->
-    <div id="map"></div>
+    </div>
 
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // Kendi OpenRouteService API Anahtarınız
         const apiKey = "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6ImYzMTU3MGQ5YWU1NDQzYzRiYjBmZWNiYWYwNzAyZWZjIiwiaCI6Im11cm11cjY0In0=";
 
-        // Haritayı Başlat (Koyu Mod Görünüm)
-        const map = L.map('map', { zoomControl: false }).setView([40.9850, 29.2642], 11);
-        L.control.zoom({ position: 'bottomright' }).addTo(map);
+        // Haritayı Tam Ekran Başlat (Koyu Tema)
+        const map = L.map('map', { zoomControl: false }).setView([40.9850, 29.2642], 12);
+        L.control.zoom({ position: 'topright' }).addTo(map);
 
         L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
             maxZoom: 19,
-            attribution: '&copy; OpenStreetMap & CARTO'
+            attribution: '&copy; CARTO'
         }).addTo(map);
 
         let routeLayer = null;
 
-        // Ekranlar Arası Geçiş Fonksiyonu
         function switchScreen(screenId) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById('screen-' + screenId).classList.add('active');
@@ -198,10 +188,9 @@
             document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
             event && event.currentTarget && event.currentTarget.classList.add('active');
             
-            setTimeout(() => map.invalidateSize(), 200);
+            setTimeout(() => map.invalidateSize(), 250);
         }
 
-        // Rota Hesaplama ve Görselleştirme
         async function calculateRoute() {
             const startVal = document.getElementById('start').value.split(',').map(v => parseFloat(v.trim()));
             const endVal = document.getElementById('end').value.split(',').map(v => parseFloat(v.trim()));
@@ -238,14 +227,13 @@
 
                 if (routeLayer) map.removeLayer(routeLayer);
 
-                // Mavi Tır Rotası (Görseldeki gibi)
                 routeLayer = L.geoJSON(data, {
                     style: { color: "#38bdf8", weight: 6, opacity: 0.9 }
                 }).addTo(map);
 
                 map.fitBounds(routeLayer.getBounds());
 
-                // Başarıyla hesaplanınca otomatik Navigasyon Ekranına (Görsel 2) geç
+                // Rota çizilince doğrudan Navigasyon ekranına geç
                 switchScreen('nav');
 
             } catch (err) {
