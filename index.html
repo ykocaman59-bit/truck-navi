@@ -3,176 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TIRNAV Global - Uluslararası Tır Navigasyonu</title>
+    <title>OtoNav - Standart Navigasyon Prototipi</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        body { background: #070e1b; color: #fff; display: flex; flex-direction: column; height: 100vh; width: 100vw; overflow: hidden; }
+        body { background: #0b132b; color: #fff; display: flex; flex-direction: column; height: 100vh; width: 100vw; overflow: hidden; }
 
         #map { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
 
-        #ui-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; display: flex; flex-direction: column; pointer-events: none; }
+        .ui-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; display: flex; flex-direction: column; pointer-events: none; justify-content: space-between; padding: 15px; }
         .interactive { pointer-events: auto; }
 
-        .header { background: rgba(12, 22, 45, 0.95); padding: 12px; text-align: center; border-bottom: 1px solid #1e293b; backdrop-filter: blur(5px); }
-        .header h1 { color: #38bdf8; font-size: 18px; font-weight: 800; letter-spacing: 1px; }
-        .header p { color: #94a3b8; font-size: 10px; }
-
-        .content-area { flex-grow: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
-        .screen { display: none; flex-direction: column; gap: 12px; height: 100%; }
-        .screen.active { display: flex; }
-
-        .card { background: rgba(17, 29, 56, 0.9); backdrop-filter: blur(8px); border: 1px solid #1e293b; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
-        .card-title { font-size: 13px; font-weight: bold; color: #38bdf8; display: flex; align-items: center; gap: 6px; }
-
-        label { font-size: 11px; color: #94a3b8; }
-        input { padding: 10px; border-radius: 8px; border: 1px solid #334155; background: #070e1b; color: #fff; font-size: 13px; outline: none; width: 100%; }
+        .top-card { background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); border: 1px solid #334155; border-radius: 14px; padding: 15px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        .top-card h2 { font-size: 15px; color: #38bdf8; display: flex; align-items: center; gap: 8px; }
         
-        .btn-primary { background: linear-gradient(135deg, #0284c7, #0369a1); color: white; border: none; padding: 12px; border-radius: 10px; font-size: 14px; font-weight: bold; cursor: pointer; text-align: center; box-shadow: 0 4px 12px rgba(2, 132, 199, 0.4); width: 100%; }
+        .input-group { display: flex; flex-direction: column; gap: 4px; }
+        label { font-size: 11px; color: #94a3b8; }
+        input { padding: 10px; border-radius: 8px; border: 1px solid #334155; background: #070e1b; color: #fff; font-size: 13px; outline: none; }
 
-        .hud-top { background: rgba(15, 23, 42, 0.95); padding: 10px 15px; border-radius: 10px; border: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; }
-        .hud-bottom { background: rgba(15, 23, 42, 0.95); padding: 10px; border-radius: 10px; border: 1px solid #334155; display: flex; justify-content: space-around; text-align: center; margin-top: auto; }
-        .hud-stat span:first-child { font-size: 10px; color: #94a3b8; }
-        .hud-stat span:last-child { font-size: 15px; font-weight: bold; color: #38bdf8; }
+        .btn-go { background: #10b981; color: white; border: none; padding: 12px; border-radius: 10px; font-size: 14px; font-weight: bold; cursor: pointer; text-align: center; }
 
-        .nav-bar { display: flex; justify-content: space-around; background: rgba(9, 16, 31, 0.95); border-top: 1px solid #1e293b; padding: 8px 0; backdrop-filter: blur(10px); margin-top: auto; }
-        .nav-item { background: none; border: none; color: #64748b; font-size: 10px; display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; }
-        .nav-item.active { color: #38bdf8; }
-        .nav-item svg { width: 18px; height: 18px; fill: currentColor; }
+        .bottom-hud { background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); border: 1px solid #334155; border-radius: 14px; padding: 12px 20px; display: flex; justify-content: space-around; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        .hud-val { font-size: 16px; font-weight: bold; color: #38bdf8; }
+        .hud-lbl { font-size: 10px; color: #94a3b8; }
     </style>
 </head>
 <body>
 
     <div id="map"></div>
 
-    <div id="ui-container">
-        <div class="header interactive">
-            <h1>TIRNAV GLOBAL</h1>
-            <p>Uluslararası Tır Navigasyon Sistemi</p>
+    <div class="ui-overlay">
+        <div class="top-card interactive">
+            <h2>🚗 OtoNav Rota Planlayıcı</h2>
+            <div class="input-group">
+                <label>Nereden (Boylam, Enlem)</label>
+                <input type="text" id="start" value="29.0, 41.0">
+            </div>
+            <div class="input-group">
+                <label>Nereye (Boylam, Enlem)</label>
+                <input type="text" id="end" value="29.1, 41.1">
+            </div>
+            <button class="btn-go" onclick="drawRoute()">Rotayı Hesapla</button>
         </div>
 
-        <div class="content-area">
-            
-            <!-- EKRAN 1: ULUSLARARASI ROTA PLANLAMA -->
-            <div id="screen-home" class="screen active">
-                <div class="card interactive">
-                    <div class="card-title">🌍 Küresel Rota (Boylam, Enlem)</div>
-                    <label>Çıkış Noktası (Örn: İstanbul)</label>
-                    <input type="text" id="start" value="29.2642, 40.9850">
-                    
-                    <label>Varış Noktası (Örn: Sofya / Münih / Berlin)</label>
-                    <input type="text" id="end" value="23.3219, 42.6977" placeholder="Boylam, Enlem girin">
-                </div>
-
-                <div class="card interactive">
-                    <div class="card-title">🚛 Uluslararası Tır Profili</div>
-                    <div style="display: flex; gap: 10px;">
-                        <div style="flex: 1;"><label>Yükseklik (m)</label><input type="number" id="height" value="4.0" step="0.1"></div>
-                        <div style="flex: 1;"><label>Ağırlık (Ton)</label><input type="number" id="weight" value="40.0" step="1"></div>
-                    </div>
-                </div>
-
-                <button class="btn-primary interactive" onclick="calculateGlobalRoute()">Uluslararası Rota Oluştur</button>
+        <div class="bottom-hud interactive">
+            <div>
+                <div class="hud-val" id="dist">--</div>
+                <div class="hud-lbl">Mesafe</div>
             </div>
-
-            <!-- EKRAN 2: AKTİF NAVİGASYON -->
-            <div id="screen-nav" class="screen">
-                <div class="hud-top interactive">
-                    <div style="font-weight: bold; font-size: 13px; color: #38bdf8;">🇪🇺 Sınır / Otoyol Rotası</div>
-                    <div style="background: #0284c7; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: bold;">HGV Koridor</div>
-                </div>
-
-                <div class="hud-bottom interactive">
-                    <div class="hud-stat"><span>Toplam Mesafe</span><span id="nav-dist">-- km</span></div>
-                    <div class="hud-stat"><span>Tahmini Süre</span><span id="nav-time">-- saat</span></div>
-                    <div class="hud-stat"><span>Gabari Durumu</span><span style="color: #34d399;">Korumalı</span></div>
-                </div>
-
-                <button class="btn-primary interactive" style="background: #ef4444;" onclick="switchScreen('home')">Rotayı Bitir</button>
+            <div style="border-left: 1px solid #334155;"></div>
+            <div>
+                <div class="hud-val" id="time">--</div>
+                <div class="hud-lbl">Tahmini Süre</div>
             </div>
-
-        </div>
-
-        <div class="nav-bar interactive">
-            <button class="nav-item active" onclick="switchScreen('home')">
-                <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-                Ana Sayfa
-            </button>
-            <button class="nav-item" onclick="switchScreen('nav')">
-                <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
-                Harita
-            </button>
         </div>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        const apiKey = "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6ImYzMTU3MGQ5YWU1NDQzYzRiYjBmZWNiYWYwNzAyZWZjIiwiaCI6Im11cm11cjY0In0=";
+        const map = L.map('map', { zoomControl: false }).setView([41.0, 29.0], 12);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(map);
 
-        const map = L.map('map', { zoomControl: false }).setView([41.5, 27.0], 6);
-        L.control.zoom({ position: 'topright' }).addTo(map);
+        let currentRoute = null;
 
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-            maxZoom: 19,
-            attribution: '&copy; CARTO'
-        }).addTo(map);
-
-        let routeLayer = null;
-
-        function switchScreen(screenId) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById('screen-' + screenId).classList.add('active');
-            document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active'));
-            event && event.currentTarget && event.currentTarget.classList.add('active');
-            setTimeout(() => map.invalidateSize(), 250);
-        }
-
-        async function calculateGlobalRoute() {
-            const startVal = document.getElementById('start').value.split(',').map(v => parseFloat(v.trim()));
-            const endVal = document.getElementById('end').value.split(',').map(v => parseFloat(v.trim()));
-            const heightVal = parseFloat(document.getElementById('height').value);
-            const weightVal = parseFloat(document.getElementById('weight').value);
-
-            const url = `https://api.openrouteservice.org/v2/directions/driving-hgv/geojson`;
-
-            const bodyData = {
-                coordinates: [startVal, endVal],
-                options: {
-                    profile_params: {
-                        restrictions: { height: heightVal, weight: weightVal }
-                    }
-                }
-            };
+        async function drawRoute() {
+            const start = document.getElementById('start').value.split(',').map(v => parseFloat(v.trim()));
+            const end = document.getElementById('end').value.split(',').map(v => parseFloat(v.trim()));
+            const apiKey = "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6ImYzMTU3MGQ5YWU1NDQzYzRiYjBmZWNiYWYwNzAyZWZjIiwiaCI6Im11cm11cjY0In0=";
 
             try {
-                const response = await fetch(url, {
+                const res = await fetch(`https://api.openrouteservice.org/v2/directions/driving-car/geojson`, {
                     method: 'POST',
                     headers: { 'Authorization': apiKey, 'Content-Type': 'application/json' },
-                    body: JSON.stringify(bodyData)
+                    body: JSON.stringify({ coordinates: [start, end] })
                 });
+                const data = await res.json();
+                
+                if(data.features) {
+                    const summary = data.features[0].properties.summary;
+                    document.getElementById('dist').innerText = (summary.distance / 1000).toFixed(1) + " km";
+                    document.getElementById('time').innerText = Math.round(summary.duration / 60) + " dk";
 
-                const data = await response.json();
-                if (data.error) {
-                    alert("Uluslararası rota hesaplanamadı: " + data.error.message);
-                    return;
+                    if(currentRoute) map.removeLayer(currentRoute);
+                    currentRoute = L.geoJSON(data, { style: { color: "#10b981", weight: 6 } }).addTo(map);
+                    map.fitBounds(currentRoute.getBounds());
                 }
-
-                const summary = data.features[0].properties.summary;
-                document.getElementById('nav-dist').innerText = (summary.distance / 1000).toFixed(1) + " km";
-                document.getElementById('nav-time').innerText = (summary.duration / 3600).toFixed(1) + " saat";
-
-                if (routeLayer) map.removeLayer(routeLayer);
-
-                routeLayer = L.geoJSON(data, {
-                    style: { color: "#38bdf8", weight: 6, opacity: 0.9 }
-                }).addTo(map);
-
-                map.fitBounds(routeLayer.getBounds());
-                switchScreen('nav');
-
-            } catch (err) {
-                console.error(err);
-                alert("Bağlantı hatası oluştu.");
+            } catch(e) {
+                alert("Rota çizilemedi.");
             }
         }
     </script>
