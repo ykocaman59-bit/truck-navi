@@ -9,11 +9,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #0b131e; color: #f3f4f6; }
-        .glass-card { background: rgba(17, 24, 39, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
+        .glass-card { background: rgba(17, 24, 39, 0.9); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
         .aktif-tab { color: #34d399 !important; }
     </style>
 </head>
-<body class="min-h-screen flex flex-col justify-between pb-24">
+<body class="min-h-screen flex flex-col justify-between pb-28">
 
     <!-- Üst Bar -->
     <header class="p-4 flex justify-between items-center glass-card sticky top-0 z-50">
@@ -22,221 +22,198 @@
             <span class="font-bold text-lg tracking-wide text-white">Smartify <span class="text-emerald-400 text-xs">İSTANBUL</span></span>
         </div>
         <div class="flex items-center space-x-3">
-            <span class="text-xs bg-emerald-500/20 text-emerald-300 px-2.5 py-1 rounded-full font-medium">İstanbul, TR</span>
-            <button onclick="bildirimGoster()" class="w-9 h-9 rounded-full bg-slate-800 flex items-center justify-center text-slate-300 hover:text-white transition relative">
-                <i class="fa-solid fa-bell text-sm"></i>
-                <span class="absolute top-1 right-1 w-2 h-2 bg-emerald-400 rounded-full animate-ping"></span>
-            </button>
+            <span class="text-xs bg-emerald-500/20 text-emerald-300 px-2.5 py-1 rounded-full font-medium">İstanbul</span>
+            <div class="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs">İB</div>
         </div>
     </header>
 
-    <!-- Ana İçerik Alanı -->
+    <!-- Ana İçerik -->
     <main class="p-4 max-w-md mx-auto w-full space-y-4">
         
-        <!-- Hoşgeldin ve Hava Durumu Widget -->
+        <!-- Hava Durumu ve Özet -->
         <div class="glass-card p-5 rounded-2xl relative overflow-hidden shadow-lg border-l-4 border-l-emerald-400">
             <div class="flex justify-between items-start">
                 <div>
-                    <h2 class="text-xs uppercase tracking-wider text-slate-400 font-semibold">Günlük Özet</h2>
-                    <h1 class="text-xl font-bold text-white mt-0.5">Hoş geldin, Göktay!</h1>
+                    <h2 class="text-xs uppercase tracking-wider text-slate-400 font-semibold">Günlük Asistan</h2>
+                    <h1 class="text-xl font-bold text-white mt-0.5">İstanbul Cepte</h1>
                 </div>
                 <div class="text-right">
                     <span class="text-2xl font-black text-emerald-400">21°C</span>
                     <p class="text-xs text-slate-400">Parçalı Bulutlu</p>
                 </div>
             </div>
-            <!-- Arama Çubuğu -->
+            <!-- Arama Kutusu -->
             <div class="mt-4 relative">
                 <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-400 text-sm"></i>
-                <input type="text" id="aramaInput" onkeyup="aramaYap()" placeholder="Modül, mekan veya hat ara..." class="w-full bg-slate-900/80 text-sm text-white pl-10 pr-4 py-3 rounded-xl border border-slate-700/60 focus:outline-none focus:border-emerald-500 transition">
+                <input type="text" id="aramaKutusu" onkeyup="aramaYap()" placeholder="Modül veya özellik ara..." class="w-full bg-slate-900/90 text-sm text-white pl-10 pr-4 py-3 rounded-xl border border-slate-700 focus:outline-none focus:border-emerald-500 transition">
             </div>
         </div>
 
-        <!-- Modüller Grid Alanı -->
-        <div id="modulGrid" class="grid grid-cols-2 gap-3.5">
+        <!-- Modüller Grid (Tıklayınca Doğrudan Aşağıda Açılır) -->
+        <div id="gridMenu" class="grid grid-cols-2 gap-3.5">
             
-            <!-- Ulaşım Kartı -->
-            <div onclick="modulAc('ulasim')" class="modul-kart glass-card p-4 rounded-2xl cursor-pointer hover:border-emerald-500/50 transition group">
+            <!-- Ulaşım -->
+            <div onclick="modulGoster('ulasim')" class="kart-secenek glass-card p-4 rounded-2xl cursor-pointer hover:border-emerald-500 transition group">
                 <div class="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center mb-3 group-hover:scale-110 transition">
                     <i class="fa-solid fa-train-subway"></i>
                 </div>
                 <h3 class="font-bold text-sm text-white">İstanbul Ulaşım</h3>
-                <p class="text-xs text-slate-400 mt-1">Bakiye: 74.50 TL • Akbil & Vapur</p>
+                <p class="text-xs text-slate-400 mt-1">Bakiye: 74.50 TL • Vapur & Hatlar</p>
             </div>
 
-            <!-- Etkinlik Takvimi -->
-            <div onclick="modulAc('etkinlik')" class="modul-kart glass-card p-4 rounded-2xl cursor-pointer hover:border-emerald-500/50 transition group">
+            <!-- Etkinlik -->
+            <div onclick="modulGoster('etkinlik')" class="kart-secenek glass-card p-4 rounded-2xl cursor-pointer hover:border-purple-500 transition group">
                 <div class="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center mb-3 group-hover:scale-110 transition">
                     <i class="fa-solid fa-calendar-days"></i>
                 </div>
                 <h3 class="font-bold text-sm text-white">Etkinlik Takvimi</h3>
-                <p class="text-xs text-slate-400 mt-1">3 Ücretsiz Konser & Sergi</p>
+                <p class="text-xs text-slate-400 mt-1">Ücretsiz Konser & Sergiler</p>
             </div>
 
             <!-- Şehir Rehberi -->
-            <div onclick="modulAc('rehber')" class="modul-kart glass-card p-4 rounded-2xl cursor-pointer hover:border-emerald-500/50 transition group">
+            <div onclick="modulGoster('rehber')" class="kart-secenek glass-card p-4 rounded-2xl cursor-pointer hover:border-amber-500 transition group">
                 <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center mb-3 group-hover:scale-110 transition">
                     <i class="fa-solid fa-map-location-dot"></i>
                 </div>
                 <h3 class="font-bold text-sm text-white">Şehir Rehberi</h3>
-                <p class="text-xs text-slate-400 mt-1">Tarihi Yarımada & Rotalar</p>
+                <p class="text-xs text-slate-400 mt-1">Tarihi Yarımada Rotaları</p>
             </div>
 
             <!-- Kent Araçları -->
-            <div onclick="modulAc('araclar')" class="modul-kart glass-card p-4 rounded-2xl cursor-pointer hover:border-emerald-500/50 transition group">
+            <div onclick="modulGoster('araclar')" class="kart-secenek glass-card p-4 rounded-2xl cursor-pointer hover:border-emerald-500 transition group">
                 <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center mb-3 group-hover:scale-110 transition">
                     <i class="fa-solid fa-toolbox"></i>
                 </div>
                 <h3 class="font-bold text-sm text-white">Kent Araçları</h3>
-                <p class="text-xs text-slate-400 mt-1">İSPARK & Nöbetçi Eczane</p>
+                <p class="text-xs text-slate-400 mt-1">İSPARK & Eczane Listesi</p>
             </div>
 
         </div>
 
-        <!-- Dinamik İçerik Detay Alanı (Tıklayınca burası dolacak) -->
-        <div id="detayKutusu" class="glass-card p-5 rounded-2xl hidden space-y-3 border border-emerald-500/30">
-            <div class="flex justify-between items-center">
-                <h3 id="detayBaslik" class="font-bold text-white text-base">Modül Detayı</h3>
-                <button onclick="detayiKapat()" class="text-slate-400 hover:text-white text-sm"><i class="fa-solid fa-xmark"></i></button>
+        <!-- İÇERİK DETAY ALANI (Tıkladığında burası dolacak ve görünecek) -->
+        <div id="icerikPaneli" class="glass-card p-5 rounded-2xl space-y-3 border border-emerald-500/40">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                <h3 id="panelBaslik" class="font-bold text-white text-base">Modül Seçin</h3>
+                <button onclick="paneliKapat()" class="text-slate-400 hover:text-white px-2 py-1"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
-            <div id="detayIcerik" class="text-xs text-slate-300 space-y-2">
-                <!-- İçerikler buraya dinamik olarak gelecek -->
+            <div id="panelGovde" class="text-xs text-slate-300 space-y-2.5">
+                <p class="text-slate-400 italic">Yukarıdaki kartlardan birine dokunarak detayları görüntüleyin.</p>
             </div>
         </div>
 
-        <!-- Canlı Sistem Durumu -->
+        <!-- Sistem Durumu -->
         <div class="glass-card p-4 rounded-2xl flex items-center justify-between">
             <div class="flex items-center space-x-3">
                 <div class="w-9 h-9 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
-                    <i class="fa-solid fa-shield-halved text-sm"></i>
+                    <i class="fa-solid fa-circle-check text-sm"></i>
                 </div>
                 <div>
-                    <h4 class="text-xs font-bold text-white">Canlı Sistem Durumu</h4>
-                    <p class="text-[11px] text-slate-400">Tüm İBB servisleri aktif çalışıyor</p>
+                    <h4 class="text-xs font-bold text-white">Sistem Aktif</h4>
+                    <p class="text-[11px] text-slate-400">Tüm modüller kullanıma hazır</p>
                 </div>
             </div>
-            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
         </div>
 
     </main>
 
-    <!-- Alt Navigasyon Çubuğu -->
+    <!-- Alt Menü -->
     <nav class="fixed bottom-0 left-0 right-0 glass-card border-t border-slate-800 p-3 flex justify-around items-center z-50 max-w-md mx-auto rounded-t-2xl">
-        <button onclick="sayfaDegis('anasayfa')" id="nav-anasayfa" class="aktif-tab flex flex-col items-center space-y-1 transition">
-            <i class="fa-solid fa-house text-lg"></i>
-            <span class="text-[10px] font-medium">Ana Sayfa</span>
+        <button onclick="modulGoster('ulasim')" class="text-slate-400 hover:text-white flex flex-col items-center space-y-1 transition">
+            <i class="fa-solid fa-train-subway text-lg"></i>
+            <span class="text-[10px]">Ulaşım</span>
         </button>
-        <button onclick="sayfaDegis('kesfet')" id="nav-kesfet" class="text-slate-400 hover:text-white flex flex-col items-center space-y-1 transition">
-            <i class="fa-solid fa-compass text-lg"></i>
-            <span class="text-[10px] font-medium">Keşfet</span>
+        <button onclick="modulGoster('etkinlik')" class="text-slate-400 hover:text-white flex flex-col items-center space-y-1 transition">
+            <i class="fa-solid fa-calendar-days text-lg"></i>
+            <span class="text-[10px]">Etkinlik</span>
         </button>
-        <button onclick="sayfaDegis('ulasim')" id="nav-ulasim" class="text-slate-400 hover:text-white flex flex-col items-center space-y-1 transition">
-            <i class="fa-solid fa-chart-pie text-lg"></i>
-            <span class="text-[10px] font-medium">Ulaşım</span>
+        <button onclick="modulGoster('rehber')" class="text-slate-400 hover:text-white flex flex-col items-center space-y-1 transition">
+            <i class="fa-solid fa-map-location-dot text-lg"></i>
+            <span class="text-[10px]">Rehber</span>
         </button>
-        <button onclick="sayfaDegis('profil')" id="nav-profil" class="text-slate-400 hover:text-white flex flex-col items-center space-y-1 transition">
-            <i class="fa-solid fa-user text-lg"></i>
-            <span class="text-[10px] font-medium">Profil</span>
+        <button onclick="modulGoster('araclar')" class="text-slate-400 hover:text-white flex flex-col items-center space-y-1 transition">
+            <i class="fa-solid fa-toolbox text-lg"></i>
+            <span class="text-[10px]">Araçlar</span>
         </button>
     </nav>
 
-    <!-- JavaScript İşlevleri -->
+    <!-- JavaScript Kodları -->
     <script>
-        function modulAc(tur) {
-            const kutu = document.getElementById('detayKutusu');
-            const baslik = document.getElementById('detayBaslik');
-            const icerik = document.getElementById('detayIcerik');
-            
-            kutu.classList.remove('hidden');
+        function modulGoster(tur) {
+            const baslik = document.getElementById('panelBaslik');
+            const govde = document.getElementById('panelGovde');
 
             if (tur === 'ulasim') {
-                baslik.innerHTML = '<i class="fa-solid fa-train-subway text-blue-400 mr-2"></i> İstanbul Ulaşım ve Akbil';
-                icerik.innerHTML = `
-                    <div class="bg-slate-900/60 p-3 rounded-xl flex justify-between items-center">
-                        <span>İstanbulkart Bakiye</span>
-                        <span class="font-bold text-emerald-400">74.50 TL</span>
+                baslik.innerHTML = '<i class="fa-solid fa-train-subway text-blue-400 mr-2"></i> İstanbul Ulaşım & Akbil';
+                govde.innerHTML = `
+                    <div class="bg-slate-900 p-3 rounded-xl flex justify-between items-center">
+                        <span>İstanbulkart Bakiyesi</span>
+                        <span class="font-bold text-emerald-400 text-sm">74.50 TL</span>
                     </div>
-                    <div class="bg-slate-900/60 p-3 rounded-xl flex justify-between items-center">
-                        <span>Son Vapur Kalkış (Karaköy)</span>
-                        <span class="font-bold text-white">21:30 (Kadıköy Hattı)</span>
+                    <div class="bg-slate-900 p-3 rounded-xl flex justify-between items-center">
+                        <span>Karaköy - Kadıköy Vapuru</span>
+                        <span class="font-bold text-white">21:30 (Kalktı) / Sonraki: 22:00</span>
                     </div>
-                    <div class="bg-slate-900/60 p-3 rounded-xl flex justify-between items-center">
-                        <span>Metrobüs Durumu</span>
-                        <span class="font-bold text-emerald-400">Akıcı (Yoğunluk %35)</span>
+                    <div class="bg-slate-900 p-3 rounded-xl flex justify-between items-center">
+                        <span>Metrobüs Yoğunluk Oranı</span>
+                        <span class="font-bold text-emerald-400">%35 (Akıcı)</span>
                     </div>
                 `;
             } else if (tur === 'etkinlik') {
                 baslik.innerHTML = '<i class="fa-solid fa-calendar-days text-purple-400 mr-2"></i> İBB Etkinlik Takvimi';
-                icerik.innerHTML = `
-                    <div class="bg-slate-900/60 p-3 rounded-xl space-y-1">
-                        <div class="flex justify-between font-bold text-white"><span>Cemal Reşit Rey Konseri</span> <span class="text-purple-400 text-[10px]">Ücretsiz</span></div>
-                        <p class="text-[11px] text-slate-400">Bugün, 20:00 • Harbiye</p>
+                govde.innerHTML = `
+                    <div class="bg-slate-900 p-3 rounded-xl space-y-1">
+                        <div class="flex justify-between font-bold text-white text-xs"><span>Cemal Reşit Rey Senfoni Orkestrası</span> <span class="text-purple-400">Ücretsiz</span></div>
+                        <p class="text-[11px] text-slate-400">Harbiye • Bugün, 20:00</p>
                     </div>
-                    <div class="bg-slate-900/60 p-3 rounded-xl space-y-1">
-                        <div class="flex justify-between font-bold text-white"><span>Sanat Galerisi Sergisi</span> <span class="text-purple-400 text-[10px]">Ücretsiz</span></div>
-                        <p class="text-[11px] text-slate-400">Yarın, 10:00 - 19:00 • Taksim</p>
+                    <div class="bg-slate-900 p-3 rounded-xl space-y-1">
+                        <div class="flex justify-between font-bold text-white text-xs"><span>Taksim Sanat "Işığın İzinde" Sergisi</span> <span class="text-purple-400">Ücretsiz</span></div>
+                        <p class="text-[11px] text-slate-400">Taksim Meydanı • 10:00 - 19:00</p>
                     </div>
                 `;
             } else if (tur === 'rehber') {
                 baslik.innerHTML = '<i class="fa-solid fa-map-location-dot text-amber-400 mr-2"></i> Şehir ve Rota Rehberi';
-                icerik.innerHTML = `
-                    <div class="bg-slate-900/60 p-3 rounded-xl space-y-1">
-                        <div class="font-bold text-white">Tarihi Yarımada Yürüyüş Rotası</div>
-                        <p class="text-[11px] text-slate-400">Sultanahmet Meydanı > Ayasofya > Gülhane Parkı (2.5 Saat)</p>
+                govde.innerHTML = `
+                    <div class="bg-slate-900 p-3 rounded-xl space-y-1">
+                        <div class="font-bold text-white text-xs">Tarihi Yarımada Kültür Rotası</div>
+                        <p class="text-[11px] text-slate-400">Sultanahmet Camii ➔ Ayasofya ➔ Gülhane Parkı (Süre: 2 Saat)</p>
                     </div>
-                    <div class="bg-slate-900/60 p-3 rounded-xl space-y-1">
-                        <div class="font-bold text-white">En İyi 3 Boğaz Manzaralı Durak</div>
-                        <p class="text-[11px] text-slate-400">Ortaköy Sahil, Bebek Parkı, Üsküdar Salacak</p>
+                    <div class="bg-slate-900 p-3 rounded-xl space-y-1">
+                        <div class="font-bold text-white text-xs">En İyi Boğaz Manzarası Durakları</div>
+                        <p class="text-[11px] text-slate-400">Ortaköy Sahil, Bebek Sahil, Üsküdar Salacak</p>
                     </div>
                 `;
             } else if (tur === 'araclar') {
                 baslik.innerHTML = '<i class="fa-solid fa-toolbox text-emerald-400 mr-2"></i> Kent Araçları ve Acil';
-                icerik.innerHTML = `
-                    <div class="bg-slate-900/60 p-3 rounded-xl flex justify-between items-center">
-                        <span>İSPARK Otopark Bulucu</span>
-                        <span class="text-emerald-400 font-bold">Aktif (12 Yer Boş)</span>
+                govde.innerHTML = `
+                    <div class="bg-slate-900 p-3 rounded-xl flex justify-between items-center">
+                        <span>İSPARK Otopark Durumu</span>
+                        <span class="text-emerald-400 font-bold">12 Boş Yer (Kadıköy Meydan)</span>
                     </div>
-                    <div class="bg-slate-900/60 p-3 rounded-xl flex justify-between items-center">
+                    <div class="bg-slate-900 p-3 rounded-xl flex justify-between items-center">
                         <span>Nöbetçi Eczaneler</span>
-                        <span class="text-emerald-400 font-bold">Listele (Sultanbeyli)</span>
+                        <span class="text-emerald-400 font-bold">Listeyi Görüntüle</span>
                     </div>
-                    <div class="bg-slate-900/60 p-3 rounded-xl flex justify-between items-center">
+                    <div class="bg-slate-900 p-3 rounded-xl flex justify-between items-center">
                         <span>İBB Beyaz Masa Çözüm</span>
-                        <span class="text-white font-bold">153 Ara</span>
+                        <span class="text-white font-bold">Alo 153 Ara</span>
                     </div>
                 `;
             }
-            kutu.scrollIntoView({ behavior: 'smooth' });
+            document.getElementById('icerikPaneli').scrollIntoView({ behavior: 'smooth' });
         }
 
-        function detayiKapat() {
-            document.getElementById('detayKutusu').classList.add('hidden');
-        }
-
-        function bildirimGoster() {
-            alert("Bildirimler: Sistem güncel, yeni etkinlikler eklendi.");
-        }
-
-        function sayfaDegis(sekme) {
-            document.querySelectorAll('nav button').forEach(b => b.className = "text-slate-400 hover:text-white flex flex-col items-center space-y-1 transition");
-            document.getElementById('nav-' + sekme).className = "aktif-tab flex flex-col items-center space-y-1 transition";
-            if(sekme === 'ulasim') {
-                modulAc('ulasim');
-            } else {
-                detayiKapat();
-            }
+        function paneliKapat() {
+            document.getElementById('panelBaslik').innerText = "Modül Seçin";
+            document.getElementById('panelGovde').innerHTML = '<p class="text-slate-400 italic">Yukarıdaki kartlardan birine dokunarak detayları görüntüleyin.</p>';
         }
 
         function aramaYap() {
-            let aranan = document.getElementById('aramaInput').value.toLowerCase();
-            let kartlar = document.querySelectorAll('.modul-kart');
+            let aranan = document.getElementById('aramaKutusu').value.toLowerCase();
+            let kartlar = document.querySelectorAll('.kart-secenek');
             kartlar.forEach(kart => {
                 let metin = kart.innerText.toLowerCase();
-                if(metin.includes(aranan)) {
-                    kart.style.display = "block";
-                } else {
-                    kart.style.display = "none";
-                }
+                kart.style.display = metin.includes(aranan) ? "block" : "none";
             });
         }
     </script>
