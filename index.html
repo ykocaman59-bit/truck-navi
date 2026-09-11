@@ -1,54 +1,150 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ağır Vasıta Navigasyon</title>
-  
-  <!-- Leaflet CSS (Haritanın görünmesi için şarttır) -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  
-  <!-- Sizin stil dosyanız -->
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TIRNAV - Tır Rota Navigasyon Prototipi</title>
+    <!-- Leaflet Harita Kütüphanesi CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
+        body { background: #0b132b; color: #fff; display: flex; height: 100vh; overflow: hidden; }
+        #sidebar { width: 350px; background: #1c2541; padding: 20px; display: flex; flex-direction: column; gap: 15px; box-shadow: 5px 0 15px rgba(0,0,0,0.5); z-index: 1000; overflow-y: auto; }
+        #map { flex-grow: 1; height: 100%; }
+        h1 { font-size: 20px; color: #4cc9f0; text-align: center; margin-bottom: 10px; }
+        .input-group { display: flex; flex-direction: column; gap: 5px; }
+        label { font-size: 12px; color: #adb5bd; }
+        input, select { padding: 10px; border-radius: 8px; border: 1px solid #415a77; background: #0b132b; color: #fff; font-size: 14px; }
+        button { background: #0077b6; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        button:hover { background: #0096c7; }
+        #info-box { background: #0b132b; padding: 15px; border-radius: 8px; border: 1px solid #415a77; font-size: 14px; display: flex; flex-direction: column; gap: 8px; }
+        .info-item { display: flex; justify-content: space-between; }
+        .badge { background: #2a9d8f; padding: 3px 8px; border-radius: 4px; font-size: 11px; }
+    </style>
 </head>
 <body>
 
-  <div id="sidebar">
-    <h2>Ağır Vasıta Rotası</h2>
+    <div id="sidebar">
+        <h1>🚚 TIRNAV Pro</h1>
+        
+        <div class="input-group">
+            <label>Nereden (Başlangıç Koordinat - Boylam, Enlem)</label>
+            <input type="text" id="start" value="29.2642, 40.9850" placeholder="Örn: 29.2642, 40.9850">
+        </div>
 
-    <div class="input-group">
-      <label>Araç Tipi:</label>
-      <select id="vehicleType">
-        <option value="driving-hgv">Kamyon / Tır (HGV)</option>
-        <option value="driving-car">Binek Araç (Test)</option>
-      </select>
+        <div class="input-group">
+            <label>Nereye (Varış Koordinat - Boylam, Enlem)</label>
+            <input type="text" id="end" value="29.9206, 40.7656" placeholder="Örn: 29.9206, 40.7656">
+        </div>
+
+        <hr style="border-color: #415a77;">
+
+        <h3>Araç Profili (Gabari)</h3>
+        <div class="input-group">
+            <label>Yükseklik (Metre)</label>
+            <input type="number" id="height" value="4.0" step="0.1">
+        </div>
+        <div class="input-group">
+            <label>Ağırlık (Ton)</label>
+            <input type="number" id="weight" value="40.0" step="1">
+        </div>
+
+        <button onclick="calculateRoute()">Rota Oluştur (Tır Profili)</button>
+
+        <div id="info-box">
+            <div style="font-weight: bold; color: #4cc9f0; margin-bottom: 5px;">Yolculuk Özeti</div>
+            <div class="info-item"><span>Mesafe:</span> <span id="dist">-- km</span></div>
+            <div class="info-item"><span>Tahmini Süre:</span> <span id="duration">-- saat</span></div>
+            <div class="info-item"><span>Tır Uygunluğu:</span> <span class="badge">Gabari Korumalı</span></div>
+        </div>
     </div>
 
-    <div class="input-group">
-      <label>Maksimum Yükseklik (m):</label>
-      <input type="number" id="maxHeight" value="4.0" step="0.1">
-    </div>
+    <div id="map"></div>
 
-    <div class="input-group">
-      <label>Maksimum Ağırlık (Ton):</label>
-      <input type="number" id="maxWeight" value="18" step="1">
-    </div>
+    <!-- Leaflet Harita Kütüphanesi JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Kendi OpenRouteService API Anahtarınız
+        const apiKey = "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6ImYzMTU3MGQ5YWU1NDQzYzRiYjBmZWNiYWYwNzAyZWZjIiwiaCI6Im11cm11cjY0In0=";
 
-    <div class="input-group">
-      <label>Genişlik (m):</label>
-      <input type="number" id="maxWidth" value="2.5" step="0.1">
-    </div>
+        // Haritayı Başlat (İstanbul / Sultanbeyli odaklı)
+        const map = L.map('map').setView([40.9850, 29.2642], 11);
 
-    <hr>
-    <p class="info">Haritaya tıklayarak <strong>Başlangıç</strong> ve <strong>Varış</strong> noktalarını belirleyin.</p>
-    <button id="clearBtn">Temizle</button>
-    <div id="routeInfo"></div>
-  </div>
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
 
-  <div id="map"></div>
+        let routeLayer = null;
 
-  <!-- Leaflet JS ve Uygulama Kodu -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="app.js"></script>
+        async function calculateRoute() {
+            const startVal = document.getElementById('start').value.split(',').map(v => parseFloat(v.trim()));
+            const endVal = document.getElementById('end').value.split(',').map(v => parseFloat(v.trim()));
+            const heightVal = parseFloat(document.getElementById('height').value);
+            const weightVal = parseFloat(document.getElementById('weight').value);
+
+            // OpenRouteService HGV (Heavy Goods Vehicle) Endpoint
+            const url = `https://api.openrouteservice.org/v2/directions/driving-hgv/geojson`;
+
+            const bodyData = {
+                coordinates: [startVal, endVal],
+                options: {
+                    profile_params: {
+                        restrictions: {
+                            height: heightVal,
+                            weight: weightVal
+                        }
+                    }
+                }
+            };
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': apiKey,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(bodyData)
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    alert("Rota hesaplanamadı: " + data.error.message);
+                    return;
+                }
+
+                // Rota bilgilerini ekrana yazdır
+                const summary = data.features[0].properties.summary;
+                const distanceKm = (summary.distance / 1000).toFixed(1);
+                const durationHours = (summary.duration / 3600).toFixed(1);
+
+                document.getElementById('dist').innerText = distanceKm + " km";
+                document.getElementById('duration').innerText = durationHours + " saat";
+
+                // Haritadaki önceki rotayı sil
+                if (routeLayer) {
+                    map.removeLayer(routeLayer);
+                }
+
+                // Yeni rotayı haritaya çizdir
+                routeLayer = L.geoJSON(data, {
+                    style: {
+                        color: "#00b4d8",
+                        weight: 6,
+                        opacity: 0.8
+                    }
+                }).addTo(map);
+
+                // Haritayı rotaya odakla
+                map.fitBounds(routeLayer.getBounds());
+
+            } catch (err) {
+                console.error(err);
+                alert("Bağlantı hatası oluştu. Konsolu kontrol edin.");
+            }
+        }
+    </script>
 </body>
 </html>
