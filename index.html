@@ -3,218 +3,224 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>İstanbul Asistanı - Smartify</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>CepMelodi</title>
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #0b131e; color: #f3f4f6; }
-        .glass-card { background: rgba(17, 24, 39, 0.9); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
-        .aktif-tab { color: #34d399 !important; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); color: #fff; min-height: 100vh; padding-bottom: 70px; }
+        
+        /* Üst Bilgi Barı */
+        header { display: flex; justify-content: space-between; align-items: center; padding: 20px; }
+        .logo { font-size: 22px; font-weight: bold; display: flex; align-items: center; gap: 8px; color: #00f2fe; }
+        
+        /* Arama Kutusu */
+        .search-box { padding: 0 20px; margin-bottom: 20px; }
+        .search-box input { width: 100%; padding: 12px 18px; border-radius: 25px; border: none; background: rgba(255,255,255,0.1); color: #fff; font-size: 14px; outline: none; }
+        .search-box input::placeholder { color: #aaa; }
+
+        /* Bölüm Başlıkları */
+        .section-title { padding: 0 20px; font-size: 18px; margin-bottom: 12px; font-weight: 600; }
+
+        /* Liste Öğeleri (Şarkılar) */
+        .music-list { padding: 0 20px; display: flex; flex-direction: column; gap: 10px; }
+        .music-item { display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.07); padding: 10px 15px; border-radius: 12px; transition: 0.2s; }
+        .music-info { display: flex; align-items: center; gap: 12px; }
+        .music-thumb { width: 45px; height: 45px; border-radius: 8px; background: #444; object-fit: cover; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+        .music-details h4 { font-size: 14px; margin-bottom: 3px; }
+        .music-details p { font-size: 12px; color: #aaa; }
+        
+        .music-actions { display: flex; gap: 8px; }
+        button.action-btn { background: none; border: none; color: #fff; cursor: pointer; font-size: 18px; padding: 6px; border-radius: 50%; transition: 0.2s; }
+        button.action-btn:hover { background: rgba(255,255,255,0.1); }
+        button.download-btn { color: #00f2fe; }
+        button.delete-btn { color: #ff4757; }
+
+        /* Pencereler (Sayfalar arası geçiş için) */
+        .page { display: none; }
+        .page.active { display: block; }
+
+        /* "Müziklerim" Penceresi Özel Başlık & Geri Tuşu */
+        .sub-header { display: flex; align-items: center; gap: 15px; padding: 20px; }
+        .back-btn { background: rgba(255,255,255,0.1); border: none; color: #fff; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 5px; }
+
+        /* Alt Navigasyon Çubuğu */
+        nav { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(15, 12, 41, 0.95); backdrop-filter: blur(10px); display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid rgba(255,255,255,0.1); z-index: 100; }
+        nav button { background: none; border: none; color: #aaa; font-size: 12px; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; transition: 0.2s; }
+        nav button.active { color: #00f2fe; }
+        nav button span { font-size: 18px; }
+
+        /* Çalınıyor Çubuğu (Mini Player) */
+        .mini-player { position: fixed; bottom: 65px; left: 10px; right: 10px; background: #1f1b42; padding: 10px 15px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; border: 1px solid rgba(255,255,255,0.1); display: none; }
+        .mini-player.show { display: flex; }
     </style>
 </head>
-<body class="min-h-screen flex flex-col justify-between pb-28">
+<body>
 
-    <!-- Üst Bar -->
-    <header class="p-4 flex justify-between items-center glass-card sticky top-0 z-50">
-        <div class="flex items-center space-x-2">
-            <i class="fa-solid fa-city text-emerald-400 text-xl"></i>
-            <span class="font-bold text-lg tracking-wide text-white">Smartify <span class="text-emerald-400 text-xs">İSTANBUL</span></span>
-        </div>
-        <div class="flex items-center space-x-3">
-            <span class="text-xs bg-emerald-500/20 text-emerald-300 px-2.5 py-1 rounded-full font-medium">İstanbul</span>
-            <div class="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs">İB</div>
-        </div>
-    </header>
+    <!-- 1. ANA SAYFA -->
+    <div id="home-page" class="page active">
+        <header>
+            <div class="logo">🎵 CepMelodi</div>
+        </header>
 
-    <!-- Ana İçerik -->
-    <main class="p-4 max-w-md mx-auto w-full space-y-4">
-        
-        <!-- Hava Durumu ve Özet -->
-        <div class="glass-card p-5 rounded-2xl relative overflow-hidden shadow-lg border-l-4 border-l-emerald-400">
-            <div class="flex justify-between items-start">
-                <div>
-                    <h2 class="text-xs uppercase tracking-wider text-slate-400 font-semibold">Günlük Asistan</h2>
-                    <h1 class="text-xl font-bold text-white mt-0.5">İstanbul Cepte</h1>
-                </div>
-                <div class="text-right">
-                    <span class="text-2xl font-black text-emerald-400">21°C</span>
-                    <p class="text-xs text-slate-400">Parçalı Bulutlu</p>
-                </div>
-            </div>
-            <!-- Arama Kutusu -->
-            <div class="mt-4 relative">
-                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-400 text-sm"></i>
-                <input type="text" id="aramaKutusu" onkeyup="aramaYap()" placeholder="Modül veya özellik ara..." class="w-full bg-slate-900/90 text-sm text-white pl-10 pr-4 py-3 rounded-xl border border-slate-700 focus:outline-none focus:border-emerald-500 transition">
-            </div>
+        <div class="search-box">
+            <input type="text" placeholder="Şarkı, Sanatçı veya Albüm Ara...">
         </div>
 
-        <!-- Modüller Grid (Tıklayınca Doğrudan Aşağıda Açılır) -->
-        <div id="gridMenu" class="grid grid-cols-2 gap-3.5">
-            
-            <!-- Ulaşım -->
-            <div onclick="modulGoster('ulasim')" class="kart-secenek glass-card p-4 rounded-2xl cursor-pointer hover:border-emerald-500 transition group">
-                <div class="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center mb-3 group-hover:scale-110 transition">
-                    <i class="fa-solid fa-train-subway"></i>
+        <div class="section-title">Popüler Müzikler</div>
+        <div class="music-list" id="home-music-list">
+            <!-- Örnek Şarkılar -->
+            <div class="music-item">
+                <div class="music-info">
+                    <div class="music-thumb">🎧</div>
+                    <div class="music-details">
+                        <h4>Gece Gölgenin Rahatına Bak</h4>
+                        <p>Çağatay Akman • 3:25</p>
+                    </div>
                 </div>
-                <h3 class="font-bold text-sm text-white">İstanbul Ulaşım</h3>
-                <p class="text-xs text-slate-400 mt-1">Bakiye: 74.50 TL • Vapur & Hatlar</p>
-            </div>
-
-            <!-- Etkinlik -->
-            <div onclick="modulGoster('etkinlik')" class="kart-secenek glass-card p-4 rounded-2xl cursor-pointer hover:border-purple-500 transition group">
-                <div class="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center mb-3 group-hover:scale-110 transition">
-                    <i class="fa-solid fa-calendar-days"></i>
+                <div class="music-actions">
+                    <button class="action-btn" onclick="playMusic('Gece Gölgenin Rahatına Bak', 'Çağatay Akman', 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3')">▶️</button>
+                    <button class="action-btn download-btn" onclick="downloadMusic('Gece Gölgenin Rahatına Bak', 'Çağatay Akman', 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3')">📥</button>
                 </div>
-                <h3 class="font-bold text-sm text-white">Etkinlik Takvimi</h3>
-                <p class="text-xs text-slate-400 mt-1">Ücretsiz Konser & Sergiler</p>
             </div>
 
-            <!-- Şehir Rehberi -->
-            <div onclick="modulGoster('rehber')" class="kart-secenek glass-card p-4 rounded-2xl cursor-pointer hover:border-amber-500 transition group">
-                <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center mb-3 group-hover:scale-110 transition">
-                    <i class="fa-solid fa-map-location-dot"></i>
+            <div class="music-item">
+                <div class="music-info">
+                    <div class="music-thumb">🎸</div>
+                    <div class="music-details">
+                        <h4>Aşkın Olayım</h4>
+                        <p>Simge • 3:50</p>
+                    </div>
                 </div>
-                <h3 class="font-bold text-sm text-white">Şehir Rehberi</h3>
-                <p class="text-xs text-slate-400 mt-1">Tarihi Yarımada Rotaları</p>
-            </div>
-
-            <!-- Kent Araçları -->
-            <div onclick="modulGoster('araclar')" class="kart-secenek glass-card p-4 rounded-2xl cursor-pointer hover:border-emerald-500 transition group">
-                <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center mb-3 group-hover:scale-110 transition">
-                    <i class="fa-solid fa-toolbox"></i>
+                <div class="music-actions">
+                    <button class="action-btn" onclick="playMusic('Aşkın Olayım', 'Simge', 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3')">▶️</button>
+                    <button class="action-btn download-btn" onclick="downloadMusic('Aşkın Olayım', 'Simge', 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3')">📥</button>
                 </div>
-                <h3 class="font-bold text-sm text-white">Kent Araçları</h3>
-                <p class="text-xs text-slate-400 mt-1">İSPARK & Eczane Listesi</p>
-            </div>
-
-        </div>
-
-        <!-- İÇERİK DETAY ALANI (Tıkladığında burası dolacak ve görünecek) -->
-        <div id="icerikPaneli" class="glass-card p-5 rounded-2xl space-y-3 border border-emerald-500/40">
-            <div class="flex justify-between items-center border-b border-slate-800 pb-2">
-                <h3 id="panelBaslik" class="font-bold text-white text-base">Modül Seçin</h3>
-                <button onclick="paneliKapat()" class="text-slate-400 hover:text-white px-2 py-1"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
-            <div id="panelGovde" class="text-xs text-slate-300 space-y-2.5">
-                <p class="text-slate-400 italic">Yukarıdaki kartlardan birine dokunarak detayları görüntüleyin.</p>
             </div>
         </div>
+    </div>
 
-        <!-- Sistem Durumu -->
-        <div class="glass-card p-4 rounded-2xl flex items-center justify-between">
-            <div class="flex items-center space-x-3">
-                <div class="w-9 h-9 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
-                    <i class="fa-solid fa-circle-check text-sm"></i>
-                </div>
-                <div>
-                    <h4 class="text-xs font-bold text-white">Sistem Aktif</h4>
-                    <p class="text-[11px] text-slate-400">Tüm modüller kullanıma hazır</p>
-                </div>
-            </div>
-            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+    <!-- 2. MÜZİKLERİM (İNDİRİLENLER) PENCERESİ -->
+    <div id="downloads-page" class="page">
+        <div class="sub-header">
+            <button class="back-btn" onclick="goHome()">⬅️ Geri Dön</button>
+            <h2>İndirilen Müziklerim</h2>
         </div>
+        <div class="music-list" id="downloaded-music-list">
+            <!-- İndirilenler buraya dinamik gelecek -->
+        </div>
+    </div>
 
-    </main>
+    <!-- MİNİ OYNATICI -->
+    <div class="mini-player" id="miniPlayer">
+        <div class="music-info">
+            <div class="music-thumb" style="width:35px;height:35px;font-size:14px;">🎶</div>
+            <div class="music-details">
+                <h4 id="player-title" style="font-size:13px;">Şarkı Adı</h4>
+                <p id="player-artist" style="font-size:11px;">Sanatçı</p>
+            </div>
+        </div>
+        <button class="action-btn" onclick="stopMusic()">⏹️</button>
+    </div>
 
-    <!-- Alt Menü -->
-    <nav class="fixed bottom-0 left-0 right-0 glass-card border-t border-slate-800 p-3 flex justify-around items-center z-50 max-w-md mx-auto rounded-t-2xl">
-        <button onclick="modulGoster('ulasim')" class="text-slate-400 hover:text-white flex flex-col items-center space-y-1 transition">
-            <i class="fa-solid fa-train-subway text-lg"></i>
-            <span class="text-[10px]">Ulaşım</span>
+    <!-- ALT MENÜ -->
+    <nav>
+        <button id="nav-home" class="active" onclick="goHome()">
+            <span>🏠</span> Ana Sayfa
         </button>
-        <button onclick="modulGoster('etkinlik')" class="text-slate-400 hover:text-white flex flex-col items-center space-y-1 transition">
-            <i class="fa-solid fa-calendar-days text-lg"></i>
-            <span class="text-[10px]">Etkinlik</span>
-        </button>
-        <button onclick="modulGoster('rehber')" class="text-slate-400 hover:text-white flex flex-col items-center space-y-1 transition">
-            <i class="fa-solid fa-map-location-dot text-lg"></i>
-            <span class="text-[10px]">Rehber</span>
-        </button>
-        <button onclick="modulGoster('araclar')" class="text-slate-400 hover:text-white flex flex-col items-center space-y-1 transition">
-            <i class="fa-solid fa-toolbox text-lg"></i>
-            <span class="text-[10px]">Araçlar</span>
+        <button id="nav-downloads" onclick="openDownloads()">
+            <span>📂</span> Müziklerim
         </button>
     </nav>
 
-    <!-- JavaScript Kodları -->
+    <audio id="audioElement"></audio>
+
     <script>
-        function modulGoster(tur) {
-            const baslik = document.getElementById('panelBaslik');
-            const govde = document.getElementById('panelGovde');
+        let currentAudio = document.getElementById('audioElement');
 
-            if (tur === 'ulasim') {
-                baslik.innerHTML = '<i class="fa-solid fa-train-subway text-blue-400 mr-2"></i> İstanbul Ulaşım & Akbil';
-                govde.innerHTML = `
-                    <div class="bg-slate-900 p-3 rounded-xl flex justify-between items-center">
-                        <span>İstanbulkart Bakiyesi</span>
-                        <span class="font-bold text-emerald-400 text-sm">74.50 TL</span>
-                    </div>
-                    <div class="bg-slate-900 p-3 rounded-xl flex justify-between items-center">
-                        <span>Karaköy - Kadıköy Vapuru</span>
-                        <span class="font-bold text-white">21:30 (Kalktı) / Sonraki: 22:00</span>
-                    </div>
-                    <div class="bg-slate-900 p-3 rounded-xl flex justify-between items-center">
-                        <span>Metrobüs Yoğunluk Oranı</span>
-                        <span class="font-bold text-emerald-400">%35 (Akıcı)</span>
-                    </div>
-                `;
-            } else if (tur === 'etkinlik') {
-                baslik.innerHTML = '<i class="fa-solid fa-calendar-days text-purple-400 mr-2"></i> İBB Etkinlik Takvimi';
-                govde.innerHTML = `
-                    <div class="bg-slate-900 p-3 rounded-xl space-y-1">
-                        <div class="flex justify-between font-bold text-white text-xs"><span>Cemal Reşit Rey Senfoni Orkestrası</span> <span class="text-purple-400">Ücretsiz</span></div>
-                        <p class="text-[11px] text-slate-400">Harbiye • Bugün, 20:00</p>
-                    </div>
-                    <div class="bg-slate-900 p-3 rounded-xl space-y-1">
-                        <div class="flex justify-between font-bold text-white text-xs"><span>Taksim Sanat "Işığın İzinde" Sergisi</span> <span class="text-purple-400">Ücretsiz</span></div>
-                        <p class="text-[11px] text-slate-400">Taksim Meydanı • 10:00 - 19:00</p>
-                    </div>
-                `;
-            } else if (tur === 'rehber') {
-                baslik.innerHTML = '<i class="fa-solid fa-map-location-dot text-amber-400 mr-2"></i> Şehir ve Rota Rehberi';
-                govde.innerHTML = `
-                    <div class="bg-slate-900 p-3 rounded-xl space-y-1">
-                        <div class="font-bold text-white text-xs">Tarihi Yarımada Kültür Rotası</div>
-                        <p class="text-[11px] text-slate-400">Sultanahmet Camii ➔ Ayasofya ➔ Gülhane Parkı (Süre: 2 Saat)</p>
-                    </div>
-                    <div class="bg-slate-900 p-3 rounded-xl space-y-1">
-                        <div class="font-bold text-white text-xs">En İyi Boğaz Manzarası Durakları</div>
-                        <p class="text-[11px] text-slate-400">Ortaköy Sahil, Bebek Sahil, Üsküdar Salacak</p>
-                    </div>
-                `;
-            } else if (tur === 'araclar') {
-                baslik.innerHTML = '<i class="fa-solid fa-toolbox text-emerald-400 mr-2"></i> Kent Araçları ve Acil';
-                govde.innerHTML = `
-                    <div class="bg-slate-900 p-3 rounded-xl flex justify-between items-center">
-                        <span>İSPARK Otopark Durumu</span>
-                        <span class="text-emerald-400 font-bold">12 Boş Yer (Kadıköy Meydan)</span>
-                    </div>
-                    <div class="bg-slate-900 p-3 rounded-xl flex justify-between items-center">
-                        <span>Nöbetçi Eczaneler</span>
-                        <span class="text-emerald-400 font-bold">Listeyi Görüntüle</span>
-                    </div>
-                    <div class="bg-slate-900 p-3 rounded-xl flex justify-between items-center">
-                        <span>İBB Beyaz Masa Çözüm</span>
-                        <span class="text-white font-bold">Alo 153 Ara</span>
-                    </div>
-                `;
+        // Sayfa Değiştirme Fonksiyonları
+        function goHome() {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById('home-page').classList.add('active');
+            
+            document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+            document.getElementById('nav-home').classList.add('active');
+        }
+
+        function openDownloads() {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById('downloads-page').classList.add('active');
+            
+            document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+            document.getElementById('nav-downloads').classList.add('active');
+
+            loadDownloadedList();
+        }
+
+        // Müzik Çalma
+        function playMusic(title, artist, url) {
+            currentAudio.src = url;
+            currentAudio.play();
+            
+            document.getElementById('player-title').innerText = title;
+            document.getElementById('player-artist').innerText = artist;
+            document.getElementById('miniPlayer').classList.add('show');
+        }
+
+        function stopMusic() {
+            currentAudio.pause();
+            document.getElementById('miniPlayer').classList.remove('show');
+        }
+
+        // Müzik İndirme (LocalStorage'a kaydetme)
+        function downloadMusic(title, artist, url) {
+            let downloads = JSON.parse(localStorage.getItem('cepMelodiDownloads')) || [];
+            
+            // Aynı şarkı daha önce eklenmiş mi kontrol et
+            if (!downloads.some(song => song.title === title)) {
+                downloads.push({ title, artist, url });
+                localStorage.setItem('cepMelodiDownloads', JSON.stringify(downloads));
+                alert(`"${title}" başarıyla indirildi! "Müziklerim" bölümünden dinleyebilirsin.`);
+            } else {
+                alert("Bu şarkı zaten indirilenlerde mevcut.");
             }
-            document.getElementById('icerikPaneli').scrollIntoView({ behavior: 'smooth' });
         }
 
-        function paneliKapat() {
-            document.getElementById('panelBaslik').innerText = "Modül Seçin";
-            document.getElementById('panelGovde').innerHTML = '<p class="text-slate-400 italic">Yukarıdaki kartlardan birine dokunarak detayları görüntüleyin.</p>';
-        }
+        // İndirilenleri Listeleme
+        function loadDownloadedList() {
+            let listContainer = document.getElementById('downloaded-music-list');
+            let downloads = JSON.parse(localStorage.getItem('cepMelodiDownloads')) || [];
+            
+            listContainer.innerHTML = '';
 
-        function aramaYap() {
-            let aranan = document.getElementById('aramaKutusu').value.toLowerCase();
-            let kartlar = document.querySelectorAll('.kart-secenek');
-            kartlar.forEach(kart => {
-                let metin = kart.innerText.toLowerCase();
-                kart.style.display = metin.includes(aranan) ? "block" : "none";
+            if (downloads.length === 0) {
+                listContainer.innerHTML = '<p style="text-align:center; color:#aaa; margin-top:30px;">Henüz indirilen müzik yok.</p>';
+                return;
+            }
+
+            downloads.forEach((song, index) => {
+                listContainer.innerHTML += `
+                    <div class="music-item">
+                        <div class="music-info">
+                            <div class="music-thumb">💾</div>
+                            <div class="music-details">
+                                <h4>${song.title}</h4>
+                                <p>${song.artist}</p>
+                            </div>
+                        </div>
+                        <div class="music-actions">
+                            <button class="action-btn" onclick="playMusic('${song.title}', '${song.artist}', '${song.url}')">▶️</button>
+                            <button class="action-btn delete-btn" onclick="removeDownload(${index})">🗑️</button>
+                        </div>
+                    </div>
+                `;
             });
+        }
+
+        // İndirilenlerden Silme
+        function removeDownload(index) {
+            let downloads = JSON.parse(localStorage.getItem('cepMelodiDownloads')) || [];
+            downloads.splice(index, 1);
+            localStorage.setItem('cepMelodiDownloads', JSON.stringify(downloads));
+            loadDownloadedList();
         }
     </script>
 </body>
