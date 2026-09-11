@@ -3,375 +3,134 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TIRNAV - Tırların Yol Arkadaşı</title>
+    <title>İstanbul Asistanı - Smartify</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root {
-            --bg-color: #070e1b;
-            --card-bg: #111b33;
-            --accent-blue: #007bff;
-            --accent-green: #28a745;
-            --accent-red: #dc3545;
-            --text-main: #ffffff;
-            --text-muted: #8a9ba8;
-            --border-color: #1f305e;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        }
-
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            overflow: hidden;
-        }
-
-        .phone-frame {
-            width: 100%;
-            max-width: 414px;
-            height: 100vh;
-            max-height: 896px;
-            background-color: var(--bg-color);
-            display: flex;
-            flex-direction: column;
-            position: relative;
-        }
-
-        .status-bar {
-            display: flex;
-            justify-content: space-between;
-            padding: 12px 20px;
-            font-size: 13px;
-            font-weight: 600;
-            background: var(--bg-color);
-            z-index: 10;
-        }
-
-        .screen-content {
-            flex: 1;
-            overflow-y: auto;
-            padding: 16px;
-            display: none;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-
-        .screen-content.active {
-            display: flex;
-        }
-
-        /* Ana Sayfa Tasarımı */
-        .hero-section {
-            text-align: center;
-            padding: 20px 0;
-        }
-
-        .logo-box {
-            background: linear-gradient(135deg, #1b2d63, #0b1430);
-            border-radius: 20px;
-            padding: 24px;
-            border: 1px solid var(--border-color);
-            margin-bottom: 20px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
-        }
-
-        .logo-box h1 {
-            font-size: 26px;
-            letter-spacing: 1px;
-            color: #fff;
-            margin-bottom: 6px;
-        }
-
-        .logo-box p {
-            font-size: 13px;
-            color: var(--text-muted);
-        }
-
-        .input-container {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-
-        .input-group {
-            background-color: var(--card-bg);
-            border-radius: 14px;
-            padding: 12px 16px;
-            border: 1px solid var(--border-color);
-            text-align: left;
-        }
-
-        .input-group label {
-            font-size: 11px;
-            color: var(--text-muted);
-            display: block;
-            margin-bottom: 4px;
-            font-weight: 500;
-        }
-
-        .input-group input {
-            background: transparent;
-            border: none;
-            color: #fff;
-            font-size: 15px;
-            width: 100%;
-            outline: none;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #007bff, #0056b3);
-            color: white;
-            border: none;
-            border-radius: 14px;
-            padding: 16px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            text-align: center;
-            box-shadow: 0 4px 12px rgba(0,123,255,0.4);
-            transition: opacity 0.2s;
-        }
-
-        .btn-primary:active {
-            opacity: 0.8;
-        }
-
-        /* Navigasyon / Harita Ekranı */
-        .map-screen {
-            flex: 1;
-            background: linear-gradient(to bottom, #111a30, #09101f);
-            border-radius: 16px;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            padding: 16px;
-            overflow: hidden;
-            border: 1px solid var(--border-color);
-        }
-
-        /* Sahte Yol Çizgisi Animasyon Efekti */
-        .road-simulation {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: radial-gradient(circle at center, rgba(0,123,255,0.15) 0%, transparent 70%);
-            z-index: 1;
-            pointer-events: none;
-        }
-
-        .nav-top-card, .nav-bottom-card {
-            background-color: rgba(17, 27, 51, 0.95);
-            backdrop-filter: blur(12px);
-            padding: 14px 16px;
-            border-radius: 14px;
-            border: 1px solid var(--border-color);
-            z-index: 2;
-        }
-
-        .speech-banner {
-            background-color: #1a274a;
-            border-left: 4px solid var(--accent-blue);
-            padding: 10px 14px;
-            border-radius: 8px;
-            font-size: 12px;
-            margin-top: 8px;
-            z-index: 2;
-        }
-
-        /* Alt Sekme Menüsü */
-        .bottom-nav {
-            height: 65px;
-            background-color: #0d152a;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            border-top: 1px solid var(--border-color);
-        }
-
-        .nav-item {
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            font-size: 11px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            cursor: pointer;
-            gap: 4px;
-            flex: 1;
-        }
-
-        .nav-item.active {
-            color: var(--accent-blue);
-            font-weight: 600;
-        }
-
-        .nav-item span {
-            font-size: 18px;
-        }
+        body { font-family: 'Inter', sans-serif; background-color: #0b131e; color: #f3f4f6; }
+        .glass-card { background: rgba(17, 24, 39, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); }
     </style>
 </head>
-<body>
+<body class="min-h-screen flex flex-col justify-between pb-20">
 
-<div class="phone-frame">
-    <!-- Üst Durum Çubuğu -->
-    <div class="status-bar">
-        <span>18:33</span>
-        <span>5G 🔋 13%</span>
-    </div>
+    <!-- Üst Bar -->
+    <header class="p-4 flex justify-between items-center glass-card sticky top-0 z-50">
+        <div class="flex items-center space-x-2">
+            <i class="fa-solid fa-city text-emerald-400 text-xl"></i>
+            <span class="font-bold text-lg tracking-wide text-white">Smartify <span class="text-emerald-400 text-xs">İSTANBUL</span></span>
+        </div>
+        <div class="flex items-center space-x-3">
+            <span class="text-xs bg-emerald-500/20 text-emerald-300 px-2.5 py-1 rounded-full font-medium">İstanbul, TR</span>
+            <button class="w-9 h-9 rounded-full bg-slate-800 flex items-center justify-center text-slate-300 hover:text-white transition">
+                <i class="fa-solid fa-bell text-sm"></i>
+            </button>
+        </div>
+    </header>
 
-    <!-- 1. ANA SAYFA EKRANI -->
-    <div id="screen-home" class="screen-content active">
-        <div class="hero-section">
-            <div class="logo-box">
-                <h1>🚚 TIRNAV</h1>
-                <p>Tırların Yol Arkadaşı</p>
+    <!-- Ana İçerik -->
+    <main class="p-4 max-w-md mx-auto w-full space-y-4">
+        
+        <!-- Hoşgeldin ve Hava Durumu Widget -->
+        <div class="glass-card p-5 rounded-2xl relative overflow-hidden shadow-lg border-l-4 border-l-emerald-400">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h2 class="text-xs uppercase tracking-wider text-slate-400 font-semibold">Günlük Özet</h2>
+                    <h1 class="text-xl font-bold text-white mt-0.5">Hoş geldin!</h1>
+                </div>
+                <div class="text-right">
+                    <span class="text-2xl font-black text-emerald-400">21°C</span>
+                    <p class="text-xs text-slate-400">Parçalı Bulutlu</p>
+                </div>
             </div>
+            <!-- Arama Çubuğu -->
+            <div class="mt-4 relative">
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-400 text-sm"></i>
+                <input type="text" placeholder="Araçlar, mekanlar veya hatlar ara..." class="w-full bg-slate-900/80 text-sm text-white pl-10 pr-4 py-3 rounded-xl border border-slate-700/60 focus:outline-none focus:border-emerald-500 transition">
+            </div>
+        </div>
+
+        <!-- Modüller Grid Alanı -->
+        <div class="grid grid-cols-2 gap-3.5">
             
-            <div class="input-container">
-                <div class="input-group">
-                    <label>📍 Mevcut Konum</label>
-                    <input type="text" value="Sultanbeyli / İstanbul" readonly>
+            <!-- Ulaşım Kartı -->
+            <div onclick="modulSec('Ulaşım')" class="glass-card p-4 rounded-2xl cursor-pointer hover:border-emerald-500/50 transition group">
+                <div class="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center mb-3 group-hover:scale-110 transition">
+                    <i class="fa-solid fa-train-subway"></i>
                 </div>
-
-                <div class="input-group">
-                    <label>🎯 Varış Noktası</label>
-                    <input type="text" id="destinationInput" placeholder="Adres, şehir veya ülke girin (örn: Ankara)">
-                </div>
+                <h3 class="font-bold text-sm text-white">İstanbul Ulaşım</h3>
+                <p class="text-xs text-slate-400 mt-1">Bakiye: 74.50 TL • Akbil & Vapur</p>
             </div>
+
+            <!-- Etkinlik Takvimi -->
+            <div onclick="modulSec('Etkinlik')" class="glass-card p-4 rounded-2xl cursor-pointer hover:border-emerald-500/50 transition group">
+                <div class="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center mb-3 group-hover:scale-110 transition">
+                    <i class="fa-solid fa-calendar-days"></i>
+                </div>
+                <h3 class="font-bold text-sm text-white">Etkinlik Takvimi</h3>
+                <p class="text-xs text-slate-400 mt-1">3 Ücretsiz Konser & Sergi</p>
+            </div>
+
+            <!-- Şehir Rehberi -->
+            <div onclick="modulSec('Rehber')" class="glass-card p-4 rounded-2xl cursor-pointer hover:border-emerald-500/50 transition group">
+                <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center mb-3 group-hover:scale-110 transition">
+                    <i class="fa-solid fa-map-location-dot"></i>
+                </div>
+                <h3 class="font-bold text-sm text-white">Şehir Rehberi</h3>
+                <p class="text-xs text-slate-400 mt-1">Tarihi Yarımada & Rotalar</p>
+            </div>
+
+            <!-- Kent Araçları -->
+            <div onclick="modulSec('Araclar')" class="glass-card p-4 rounded-2xl cursor-pointer hover:border-emerald-500/50 transition group">
+                <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center mb-3 group-hover:scale-110 transition">
+                    <i class="fa-solid fa-toolbox"></i>
+                </div>
+                <h3 class="font-bold text-sm text-white">Kent Araçları</h3>
+                <p class="text-xs text-slate-400 mt-1">İSPARK & Nöbetçi Eczane</p>
+            </div>
+
         </div>
 
-        <div>
-            <button class="btn-primary" style="width: 100%;" onclick="startNavigation()">Rota Oluştur</button>
-            <div class="speech-banner" style="margin-top: 15px;">
-                🎙️ <strong>Sesli Asistan:</strong> Rota oluşturulduğunda tır boyutlarına uygun sesli uyarılar otomatik devreye girer.
+        <!-- Hızlı Durum Kartı -->
+        <div class="glass-card p-4 rounded-2xl flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-9 h-9 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+                    <i class="fa-solid fa-shield-halved text-sm"></i>
+                </div>
+                <div>
+                    <h4 class="text-xs font-bold text-white">Canlı Sistem Durumu</h4>
+                    <p class="text-[11px] text-slate-400">Tüm İBB servisleri aktif çalışıyor</p>
+                </div>
             </div>
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
         </div>
-    </div>
 
-    <!-- 2. NAVİGASYON & HARİTA EKRANI -->
-    <div id="screen-navigation" class="screen-content" style="padding: 0;">
-        <div class="map-screen">
-            <div class="road-simulation"></div>
-            
-            <!-- Üst Bilgi Kartı -->
-            <div class="nav-top-card">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <div>
-                        <span style="font-size: 22px; font-weight:bold;">⬆ 1.2 km</span>
-                        <p style="font-size:12px; color:var(--text-muted); margin-top:2px;">İstanbul ➔ <span id="targetCityText">Ankara</span> (Otoyol O-7)</p>
-                    </div>
-                    <div style="background:var(--accent-green); padding:6px 12px; border-radius:10px; font-weight:bold; font-size:14px;">
-                        82 km/s
-                    </div>
-                </div>
-            </div>
+    </main>
 
-            <!-- Alt Rota Bilgileri -->
-            <div>
-                <div class="speech-banner">
-                    🔊 <strong>Asistan:</strong> "Dikkat! 500 metre sonra 4.00 m yüksekliğinde köprü var. Tır profiline uygun güvenli şeridesiniz."
-                </div>
-                <div class="nav-bottom-card" style="margin-top: 8px;">
-                    <div style="display:flex; justify-content:space-between; text-align:center;">
-                        <div><small style="color:var(--text-muted); font-size:11px;">Kalan Mesafe</small><br><strong style="font-size:15px;">482 km</strong></div>
-                        <div><small style="color:var(--text-muted); font-size:11px;">Tahmini Süre</small><br><strong style="font-size:15px;">5 sa 42 dk</strong></div>
-                        <div><small style="color:var(--text-muted); font-size:11px;">Varış Zamanı</small><br><strong style="font-size:15px;">19:37</strong></div>
-                    </div>
-                </div>
-                <button class="btn-primary" onclick="switchScreen('home')" style="width:100%; margin-top:10px; background:linear-gradient(135deg, #dc3545, #a71d2a);">Rotayı İptal Et</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 3. AYARLAR & PROFİL EKRANI -->
-    <div id="screen-settings" class="screen-content">
-        <div>
-            <h2 style="margin-bottom: 15px; font-size: 20px;">Araç Profili & Ayarlar</h2>
-            <div class="input-container">
-                <div class="input-group">
-                    <label>Araç Türü</label>
-                    <input type="text" value="Çekici + Dorse" readonly>
-                </div>
-                <div class="input-group">
-                    <label>Yükseklik Sınırı Koruması</label>
-                    <input type="text" value="4.00 m (Aktif)" readonly>
-                </div>
-                <div class="input-group">
-                    <label>Ağırlık Sınırı</label>
-                    <input type="text" value="40.0 ton" readonly>
-                </div>
-            </div>
-        </div>
-        <button class="btn-primary" onclick="alert('Ayarlar başarıyla kaydedildi!')" style="width: 100%;">Kaydet</button>
-    </div>
-
-    <!-- Alt Sekme Menüsü -->
-    <nav class="bottom-nav">
-        <button class="nav-item active" onclick="switchScreen('home', this)">
-            <span>🏠</span> Ana Sayfa
+    <!-- Alt Navigasyon Çubuğu -->
+    <nav class="fixed bottom-0 left-0 right-0 glass-card border-t border-slate-800 p-3 flex justify-around items-center z-50 max-w-md mx-auto rounded-t-2xl">
+        <button class="text-emerald-400 flex flex-col items-center space-y-1">
+            <i class="fa-solid fa-house text-lg"></i>
+            <span class="text-[10px] font-medium">Ana Sayfa</span>
         </button>
-        <button class="nav-item" onclick="switchScreen('navigation', this)">
-            <span>🗺️</span> Harita
+        <button class="text-slate-400 hover:text-white flex flex-col items-center space-y-1 transition">
+            <i class="fa-solid fa-compass text-lg"></i>
+            <span class="text-[10px] font-medium">Keşfet</span>
         </button>
-        <button class="nav-item" onclick="switchScreen('settings', this)">
-            <span>⚙️</span> Ayarlar
+        <button class="text-slate-400 hover:text-white flex flex-col items-center space-y-1 transition">
+            <i class="fa-solid fa-chart-pie text-lg"></i>
+            <span class="text-[10px] font-medium">Ulaşım</span>
+        </button>
+        <button class="text-slate-400 hover:text-white flex flex-col items-center space-y-1 transition">
+            <i class="fa-solid fa-user text-lg"></i>
+            <span class="text-[10px] font-medium">Profil</span>
         </button>
     </nav>
-</div>
 
-<script>
-    function switchScreen(screenName, btnElement) {
-        document.querySelectorAll('.screen-content').forEach(el => el.classList.remove('active'));
-        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-
-        if(screenName === 'home') {
-            document.getElementById('screen-home').classList.add('active');
-            if(btnElement) btnElement.classList.add('active');
-        } else if(screenName === 'navigation') {
-            document.getElementById('screen-navigation').classList.add('active');
-            speakRouteInstruction("Rota oluşturuldu. Tır boyutlarınıza uygun güvenli seyrüsefer başlatılıyor.");
-        } else if(screenName === 'settings') {
-            document.getElementById('screen-settings').classList.add('active');
-            if(btnElement) btnElement.classList.add('active');
+    <script>
+        function modulSec(isim) {
+            alert(isim + " modülü yakında aktifleşecek!");
         }
-    }
-
-    function startNavigation() {
-        const dest = document.getElementById('destinationInput').value.trim();
-        if(dest) {
-            document.getElementById('targetCityText').innerText = dest;
-        }
-        // Harita sekmesini aktif et
-        document.querySelectorAll('.screen-content').forEach(el => el.classList.remove('active'));
-        document.getElementById('screen-navigation').classList.add('active');
-        
-        // Menüde Harita ikonunu aktif yap
-        const navButtons = document.querySelectorAll('.nav-item');
-        navButtons.forEach(el => el.classList.remove('active'));
-        navButtons[1].classList.add('active');
-
-        speakRouteInstruction("Rota oluşturuldu. Güvenli yolculuklar dileriz.");
-    }
-
-    function speakRouteInstruction(text) {
-        if ('speechSynthesis' in window) {
-            window.speechSynthesis.cancel(); // Önceki sesleri durdur
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'tr-TR';
-            utterance.rate = 1.0;
-            window.speechSynthesis.speak(utterance);
-        }
-    }
-</script>
-
+    </script>
 </body>
 </html>
