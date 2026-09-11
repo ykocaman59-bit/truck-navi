@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TIRNAV - Tırların Yol Arkadaşı</title>
-    <!-- Google Maps API -->
+    <!-- Google Maps API (Maps, Places ve Geocoding Entegre) -->
     <script src="https://maps.googleapis.com/maps/api/js?key=eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6ImYzMTU3MGQ5YWU1NDQzYzRiYjBmZWNiYWYwNzAyZWZjIiwiaCI6Im11cm11cjY0In0=&libraries=places&language=tr"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
@@ -68,7 +68,7 @@
         <div class="nav-overlay" id="navOverlay">
             <div class="nav-info">
                 <h3 id="instructionText">Rota Oluşturuldu</h3>
-                <p id="routeStats">Mesafe ve süre hesaplanıyor...</p>
+                <p id="routeStats">Yol Tarifi Yapılıyor...</p>
             </div>
             <button class="btn-danger" onclick="endTrip()">Yolculuğu Bitir</button>
         </div>
@@ -105,16 +105,17 @@
         let isNavigating = false;
 
         function initMap() {
-            // Varsayılan Konum (İstanbul Sultanbeyli)
+            // Varsayılan Konum (İstanbul)
             userLatLng = { lat: 40.9631, lng: 29.2662 };
 
-            // Gerçek Harita Görünümü (Standart Google Haritası)
+            // Gerçek Google Maps Nesnesi Oluşturuluyor
             map = new google.maps.Map(document.getElementById('map'), {
                 center: userLatLng,
                 zoom: 15,
-                mapTypeId: 'roadmap', // Gerçek harita katmanı
-                disableDefaultUI: false, // Gerçek harita kontrolleri aktif
-                zoomControl: true
+                mapTypeId: 'roadmap',
+                disableDefaultUI: false,
+                zoomControl: true,
+                streetViewControl: false
             });
 
             directionsService = new google.maps.DirectionsService();
@@ -124,38 +125,37 @@
                 polylineOptions: { strokeColor: "#0077b6", strokeWeight: 7 }
             });
 
-            // Canlı Konum Takibi (Anlık Güncelleme)
+            // Canlı GPS Konum Takibi
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
                     (position) => {
-                        updateUserPosition(position);
+                        updateLivePosition(position);
                     },
-                    () => {
-                        document.getElementById('startLocation').value = "Konum alınamadı, varsayılan kullanılıyor.";
+                    (error) => {
+                        console.error(error);
+                        document.getElementById('startLocation').value = "Konum izni gerekli";
                     },
                     { enableHighAccuracy: true }
                 );
 
-                // Sürekli Konum İzleme (Canlı Takip)
+                // Sürekli Konum Güncelleme (Canlı Hareket Takibi)
                 watchID = navigator.geolocation.watchPosition(
                     (position) => {
-                        if (!isNavigating) {
-                            updateUserPosition(position);
-                        }
+                        updateLivePosition(position);
                     },
                     (error) => { console.error(error); },
-                    { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 }
+                    { enableHighAccuracy: true, maximumAge: 5000, timeout: 5000 }
                 );
             }
 
-            // Google Places Autocomplete (Varış Noktası Önerileri)
+            // Google Places Autocomplete (Arama Kutusu Önerileri)
             const input = document.getElementById('endLocation');
             const autocomplete = new google.maps.places.Autocomplete(input);
             autocomplete.bindTo('bounds', map);
         }
 
-        // Kullanıcı Konumunu Haritada Güncelleme
-        function updateUserPosition(position) {
+        // Anlık Konumu Haritada ve Inputta Güncelleme
+        function updateLivePosition(position) {
             userLatLng = {
                 lat: position.coords.latitude,
                 lng: position.coords.longitude
@@ -169,7 +169,7 @@
                     icon: {
                         path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
                         scale: 6,
-                        fillColor: "#4361ee",
+                        fillColor: "#00b4d8",
                         fillOpacity: 1,
                         strokeWeight: 2,
                         strokeColor: "#ffffff"
@@ -183,7 +183,7 @@
                 map.setCenter(userLatLng);
             }
 
-            // Adres Çevirisi (Geocoding)
+            // Koordinatı Adrese Çevirme (Geocoding)
             const geocoder = new google.maps.Geocoder();
             geocoder.geocode({ location: userLatLng }, (results, status) => {
                 if (status === "OK" && results[0]) {
@@ -192,7 +192,7 @@
             });
         }
 
-        // Sesli Asistan Fonksiyonu
+        // Sesli Asistan (Speech Synthesis)
         function speak(text) {
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
@@ -203,7 +203,7 @@
             }
         }
 
-        // Rota Oluşturma ve Yolculuğa Başlama
+        // Rota Oluşturma ve Yolculuğu Başlatma
         function createRoute() {
             let destination = document.getElementById('endLocation').value;
             if (!destination) {
@@ -213,14 +213,14 @@
 
             isNavigating = true;
 
-            // Görsel Geçişler
+            // Görsel Panel Değişimi
             document.getElementById('controlPanel').style.display = 'none';
             document.getElementById('navOverlay').style.display = 'flex';
 
-            // Sesli Asistan Anonsu
+            // İstediğiniz Sesli Karşılama
             speak("Rota oluşturuluyor. Keyifli sürüşler dilerim.");
 
-            // Google Directions API ile Rota Hesaplama ve Yol Tarifi
+            // Google Directions ile Rota Çizme ve Yol Tarifi Alma
             const request = {
                 origin: userLatLng,
                 destination: destination,
@@ -235,19 +235,19 @@
                     let distance = routeLeg.distance.text;
                     let duration = routeLeg.duration.text;
                     
-                    document.getElementById('routeStats').innerText = `Mesafe: ${distance} - Süre: ${duration}`;
+                    document.getElementById('routeStats').innerText = `Mesafe: ${distance} | Süre: ${duration}`;
 
                     if (routeLeg.steps && routeLeg.steps.length > 0) {
                         let firstInstruction = routeLeg.steps[0].instructions.replace(/<[^>]*>?/gm, '');
                         document.getElementById('instructionText').innerText = firstInstruction;
                         
-                        // 3 saniye sonra ilk yol tarifini seslendir
+                        // İlk yol tarifini sesli olarak okut
                         setTimeout(() => {
                             speak("Yol tarifi: " + firstInstruction);
                         }, 3000);
                     }
                 } else {
-                    alert("Rota oluşturulamadı. Lütfen geçerli bir konum girin.");
+                    alert("Rota hesaplanamadı: " + status);
                     endTrip();
                 }
             });
@@ -255,6 +255,7 @@
 
         // Yolculuğu Bitir
         function endTrip() {
+            // İstediğiniz Sesli Bitiş Mesajı
             speak("Yolculuk bitmiştir. Mutlu günler dilerim.");
             isNavigating = false;
             document.getElementById('navOverlay').style.display = 'none';
