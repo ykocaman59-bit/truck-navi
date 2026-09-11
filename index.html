@@ -4,61 +4,57 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TIRNAV - Tırların Yol Arkadaşı</title>
-    <!-- Leaflet Harita Kütüphanesi -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Google Maps API (Gönderdiğiniz API Key ile Entegre Edilmiştir) -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6ImYzMTU3MGQ5YWU1NDQzYzRiYjBmZWNiYWYwNzAyZWZjIiwiaCI6Im11cm11cjY0In0=&libraries=places&language=tr"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
         body { background-color: #0b132b; color: #fff; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
         
-        /* Üst Bilgi / Header */
-        header { padding: 15px; text-align: center; background: #1c2541; border-bottom: 1px solid #3a506b; }
-        header h1 { font-size: 20px; color: #48cae4; letter-spacing: 1px; }
+        header { padding: 12px; text-align: center; background: #1c2541; border-bottom: 1px solid #3a506b; }
+        header h1 { font-size: 18px; color: #48cae4; letter-spacing: 1px; }
 
-        /* Ana İçerik Alanı */
         #container { flex: 1; position: relative; display: flex; flex-direction: column; }
-        #map { flex: 1; width: 100%; height: 100%; z-index: 1; }
+        #map { flex: 1; width: 100%; height: 100%; }
 
-        /* Kontrol Paneli (Görsel 1'deki Ana Sayfa Formu) */
+        /* Kontrol Paneli (Görsel 1 Tasarımı) */
         .control-panel {
             position: absolute; bottom: 70px; left: 15px; right: 15px;
             background: rgba(28, 37, 65, 0.95); backdrop-filter: blur(10px);
-            padding: 20px; border-radius: 16px; border: 1px solid #3a506b; z-index: 1000;
+            padding: 20px; border-radius: 16px; border: 1px solid #3a506b; z-index: 10;
             box-shadow: 0 10px 25px rgba(0,0,0,0.5);
         }
-        .input-group { margin-bottom: 15px; display: flex; align-items: center; background: #0b132b; padding: 12px; border-radius: 10px; border: 1px solid #3a506b; }
+        .input-group { margin-bottom: 12px; display: flex; align-items: center; background: #0b132b; padding: 12px; border-radius: 10px; border: 1px solid #3a506b; }
         .input-group span { margin-right: 10px; font-size: 18px; }
         .input-group input { background: transparent; border: none; color: #fff; outline: none; width: 100%; font-size: 14px; }
         
         .btn-primary {
             width: 100%; background: linear-gradient(135deg, #0077b6, #00b4d8); color: white;
             border: none; padding: 14px; border-radius: 12px; font-weight: bold; font-size: 16px; cursor: pointer;
-            transition: 0.3s;
         }
-        .btn-primary:hover { opacity: 0.9; }
 
-        /* Alt Navigasyon Çubuğu (Görseldeki Menü) */
+        /* Navigasyon Aktif Üst Bilgi */
+        .nav-overlay {
+            position: absolute; top: 15px; left: 15px; right: 15px;
+            background: rgba(11, 19, 43, 0.95); padding: 15px; border-radius: 12px;
+            border: 1px solid #00b4d8; z-index: 10; display: none;
+            justify-content: space-between; align-items: center;
+        }
+        .nav-overlay h3 { font-size: 15px; color: #48cae4; }
+        .nav-overlay p { font-size: 12px; color: #adb5bd; }
+        
+        .btn-danger {
+            background: #d90429; color: white; border: none; padding: 8px 12px;
+            border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px;
+        }
+
+        /* Alt Navigasyon Çubuğu */
         nav {
             height: 65px; background: #1c2541; display: flex; justify-content: space-around;
-            align-items: center; border-top: 1px solid #3a506b; z-index: 1000;
+            align-items: center; border-top: 1px solid #3a506b; z-index: 10;
         }
         nav div { text-align: center; font-size: 11px; color: #8d99ae; cursor: pointer; }
         nav div.active { color: #48cae4; }
         nav div span { display: block; font-size: 18px; margin-bottom: 2px; }
-
-        /* Navigasyon Aktif Bilgi Kutusu */
-        .nav-overlay {
-            position: absolute; top: 20px; left: 15px; right: 15px;
-            background: rgba(11, 19, 43, 0.9); padding: 15px; border-radius: 12px;
-            border: 1px solid #00b4d8; z-index: 1000; display: none;
-            justify-content: space-between; align-items: center;
-        }
-        .nav-overlay h3 { font-size: 16px; color: #48cae4; }
-        .nav-overlay p { font-size: 13px; color: #adb5bd; }
-        
-        .btn-danger {
-            background: #d90429; color: white; border: none; padding: 8px 14px;
-            border-radius: 8px; font-weight: bold; cursor: pointer;
-        }
     </style>
 </head>
 <body>
@@ -68,23 +64,23 @@
     </header>
 
     <div id="container">
-        <!-- Aktif Navigasyon Üst Bilgi -->
+        <!-- Aktif Navigasyon Üst Paneli -->
         <div class="nav-overlay" id="navOverlay">
             <div>
                 <h3 id="targetTitle">Rota Oluşturuldu</h3>
-                <p>Yolculuk Devam Ediyor...</p>
+                <p>Yol Tarifi Yapılıyor...</p>
             </div>
             <button class="btn-danger" onclick="endTrip()">Yolculuğu Bitir</button>
         </div>
 
-        <!-- Harita Alanı -->
+        <!-- Google Harita Alanı -->
         <div id="map"></div>
 
         <!-- Rota Oluşturma Paneli -->
         <div class="control-panel" id="controlPanel">
             <div class="input-group">
                 <span>📍</span>
-                <input type="text" id="startLocation" value="Sultanbeyli / İstanbul" readonly>
+                <input type="text" id="startLocation" value="Mevcut Konum Alınıyor..." readonly>
             </div>
             <div class="input-group">
                 <span>🎯</span>
@@ -103,25 +99,78 @@
         <div><span>⚙️</span>Diğer</div>
     </nav>
 
-    <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // Harita Başlatma (Sultanbeyli / İstanbul Odaklı)
-        let map = L.map('map', {zoomControl: false}).setView([40.9631, 29.2662], 13);
+        let map, userLatLng, directionsService, directionsRenderer;
+        let currentPositionText = "Sultanbeyli / İstanbul";
 
-        // Koyu Tema Harita Katmanı (CartoDB Dark Matter)
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-            maxZoom: 19,
-            attribution: '&copy; OpenStreetMap'
-        }).addTo(map);
+        function initMap() {
+            // Varsayılan Konum (İstanbul Sultanbeyli)
+            userLatLng = { lat: 40.9631, lng: 29.2662 };
 
-        // Kullanıcı Konum İşaretçisi
-        let marker = L.marker([40.9631, 29.2662]).addTo(map)
-            .bindPopup("Mevcut Konumunuz: Sultanbeyli / İstanbul").openPopup();
+            // Harita Oluşturma ve Koyu Tema (Dark Mode) Stili
+            map = new google.maps.Map(document.getElementById('map'), {
+                center: userLatLng,
+                zoom: 14,
+                disableDefaultUI: true,
+                styles: [
+                    { elementType: "geometry", stylers: [{ color: "#1d2c4d" }] },
+                    { elementType: "labels.text.fill", stylers: [{ color: "#8ec3b9" }] },
+                    { elementType: "labels.text.stroke", stylers: [{ color: "#1a3646" }] },
+                    { featureType: "road", elementType: "geometry", stylers: [{ color: "#304a7d" }] },
+                    { featureType: "water", elementType: "geometry", stylers: [{ color: "#0e1626" }] }
+                ]
+            });
+
+            directionsService = new google.maps.DirectionsService();
+            directionsRenderer = new google.maps.DirectionsRenderer({
+                map: map,
+                suppressMarkers: false,
+                polylineOptions: { strokeColor: "#00b4d8", strokeWeight: 6 }
+            });
+
+            // Gerçek Konumu Alma (Geolocation)
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        userLatLng = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude
+                        };
+                        map.setCenter(userLatLng);
+                        
+                        // Konum adını çözme (Geocoding)
+                        const geocoder = new google.maps.Geocoder();
+                        geocoder.geocode({ location: userLatLng }, (results, status) => {
+                            if (status === "OK" && results[0]) {
+                                currentPositionText = results[0].formatted_address;
+                                document.getElementById('startLocation').value = currentPositionText;
+                            } else {
+                                document.getElementById('startLocation').value = "Konumunuz İşaretlendi";
+                            }
+                        });
+
+                        new google.maps.Marker({
+                            position: userLatLng,
+                            map: map,
+                            title: "Mevcut Konumunuz"
+                        });
+                    },
+                    () => {
+                        document.getElementById('startLocation').value = currentPositionText;
+                    }
+                );
+            }
+
+            // Google Places Autocomplete (Arama Kutusu Önerileri İçin)
+            const input = document.getElementById('endLocation');
+            const autocomplete = new google.maps.places.Autocomplete(input);
+            autocomplete.bindTo('bounds', map);
+        }
 
         // Sesli Asistan Fonksiyonu
         function speak(text) {
             if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel(); // Önceki sesleri durdur
                 let utterance = new SpeechSynthesisUtterance(text);
                 utterance.lang = 'tr-TR';
                 utterance.rate = 1.0;
@@ -132,12 +181,12 @@
         // Rota Oluşturma ve Yolculuğa Başlama
         function createRoute() {
             let destination = document.getElementById('endLocation').value;
-            if(!destination) {
+            if (!destination) {
                 alert("Lütfen bir varış noktası girin.");
                 return;
             }
 
-            // Arayüz Değişimi
+            // Arayüz Görünüm Geçişi
             document.getElementById('controlPanel').style.display = 'none';
             document.getElementById('navOverlay').style.display = 'flex';
             document.getElementById('targetTitle').innerText = "Rota: " + destination;
@@ -145,14 +194,27 @@
             // Sesli Asistan Anonsu
             speak("Rota oluşturuluyor. Keyifli sürüşler dilerim.");
 
-            // Simüle Edilmiş Rota Çizgisi (İstanbul - Ankara Hattı Örneği)
-            let latlngs = [
-                [40.9631, 29.2662],
-                [40.9800, 29.3500],
-                [40.7500, 30.3500]
-            ];
-            let polyline = L.polyline(latlngs, {color: '#00b4d8', weight: 6}).addTo(map);
-            map.fitBounds(polyline.getBounds());
+            // Google Directions API ile Rota Çizme
+            const request = {
+                origin: userLatLng,
+                destination: destination,
+                travelMode: google.maps.TravelMode.DRIVING,
+                transitOptions: { routingPreference: 'FEWER_TRANSFERS' }
+            };
+
+            directionsService.route(request, (result, status) => {
+                if (status == 'OK') {
+                    directionsRenderer.setDirections(result);
+                    // İlk manevra / yol tarifini seslendir
+                    let routeLeg = result.routes[0].legs[0];
+                    if (routeLeg && routeLeg.steps && routeLeg.steps.length > 0) {
+                        let firstInstruction = routeLeg.steps[0].instructions.replace(/<[^>]*>?/gm, '');
+                        setTimeout(() => { speak("İlk tarif: " + firstInstruction); }, 3000);
+                    }
+                } else {
+                    alert("Rota hesaplanamadı: " + status);
+                }
+            });
         }
 
         // Yolculuğu Bitir
@@ -161,8 +223,12 @@
             document.getElementById('navOverlay').style.display = 'none';
             document.getElementById('controlPanel').style.display = 'block';
             document.getElementById('endLocation').value = '';
-            map.setView([40.9631, 29.2662], 13);
+            directionsRenderer.set('directions', null);
+            map.setCenter(userLatLng);
+            map.setZoom(14);
         }
+
+        window.onload = initMap;
     </script>
 </body>
 </html>
