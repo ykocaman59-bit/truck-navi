@@ -27,6 +27,16 @@ jobs:
           channel: 'stable'
           cache: true
 
+      - name: Eksik Android Dosyalarını Oluştur (flutter create)
+        run: |
+          # Eğer android klasörü yoksa projeye otomatik ekler
+          if [ ! -d "android" ]; then
+            flutter create . --platforms=android --org com.tirnav.app
+          else
+            # Zaten varsa ama eksik dosyalar varsa tamamlar
+            flutter create . --platforms=android --org com.tirnav.app --overwrite
+          fi
+
       - name: Android Manifest ve İzinleri Düzenle
         run: |
           MANIFEST_PATH="android/app/src/main/AndroidManifest.xml"
@@ -39,8 +49,6 @@ jobs:
             if ! grep -q "ACCESS_FINE_LOCATION" "$MANIFEST_PATH"; then
               sed -i '/<uses-permission android:name="android.permission.INTERNET"/a \    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />\n    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />\n    <uses-permission android:name="android.permission.RECORD_AUDIO" />\n    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />' $MANIFEST_PATH
             fi
-          else
-            echo "Uyarı: AndroidManifest.xml henüz oluşturulmamış, flutter create bekleniyor..."
           fi
 
       - name: Bağımlılıkları Yükle (flutter pub get)
