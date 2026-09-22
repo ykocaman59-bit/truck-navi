@@ -1,51 +1,549 @@
-name: TIRNAV APK
+name: TIRNAV Android APK Builder
 
 on:
-  workflow_dispatch:
   push:
-    branches:
-      - main
+    branches: [ main, master ]
 
 jobs:
   build:
-    name: Build Android APK
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+    - name: Repo Kodlarını İndir
+      uses: actions/checkout@v4
 
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "17"
+    - name: Java (JDK) Ortamını Kur
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
 
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: "3.35.0"
-          channel: stable
-          cache: true
+    - name: Gradle Kurulumu (7.5)
+      uses: gradle/actions/setup-gradle@v3
+      with:
+        gradle-version: '7.5'
 
-      - name: Flutter Doctor
-        run: flutter doctor -v
+    - name: Saf Android Gradle Projesini Oluştur ve Derle
+      run: |
+        # ---------------------------------------------------------
+        # DİZİNLER
+        # ---------------------------------------------------------
 
-      - name: Create Flutter project files
-        run: |
-          flutter create --platforms=android .
+        mkdir -p app/src/main/java/com/github/ykocaman59bit/tirnavi
+        mkdir -p app/src/main/res/layout
+        mkdir -p app/src/main/res/values
+        mkdir -p app/src/main/res/drawable
+        mkdir -p app/src/main/res/mipmap-hdpi
+        mkdir -p app/src/main/assets
 
-      - name: Get dependencies
-        run: flutter pub get
+        # HTML dosyasını assets klasörüne kopyala
+        cp index.html app/src/main/assets/index.html
 
-      - name: Check project
-        run: flutter analyze
 
-      - name: Build APK
-        run: flutter build apk --release
+        # ---------------------------------------------------------
+        # ANDROID MANIFEST
+        # ---------------------------------------------------------
 
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: TIRNAV-APK
-          path: build/app/outputs/flutter-apk/app-release.apk
+        cat << 'EOF' > app/src/main/AndroidManifest.xml
+        <?xml version="1.0" encoding="utf-8"?>
+        <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+            <!-- İzinler (Konum, Bildirim ve Sesli Asistan/Mikrofon) -->
+            <uses-permission android:name="android.permission.INTERNET" />
+            <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+            <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+            <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+            <uses-permission android:name="android.permission.RECORD_AUDIO" />
+            <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+            <!-- Donanım özellikleri -->
+            <uses-feature android:name="android.hardware.microphone" android:required="false" />
+            <uses-feature android:name="android.hardware.location.gps" android:required="false" />
+
+            <application
+                android:allowBackup="true"
+                android:icon="@mipmap/ic_launcher"
+                android:label="TIRNAV"
+                android:roundIcon="@mipmap/ic_launcher_round"
+                android:supportsRtl="true"
+                android:theme="@style/Theme.AppCompat.Light.NoActionBar"
+                android:usesCleartextTraffic="true">
+
+                <!-- Splash -->
+                <activity
+                    android:name=".SplashActivity"
+                    android:exported="true"
+                    android:theme="@style/Theme.AppCompat.Light.NoActionBar">
+
+                    <intent-filter>
+                        <action android:name="android.intent.action.MAIN" />
+                        <category android:name="android.intent.category.LAUNCHER" />
+                    </intent-filter>
+
+                </activity>
+
+                <!-- Ana WebView -->
+                <activity
+                    android:name=".MainActivity"
+                    android:exported="false"
+                    android:configChanges="orientation|screenSize|keyboardHidden" />
+
+            </application>
+
+        </manifest>
+        EOF
+
+
+        # ---------------------------------------------------------
+        # SPLASH ACTIVITY (AÇILIŞTA İZİN KONTROLÜ VE İSTEMİ)
+        # ---------------------------------------------------------
+
+        cat << 'EOF' > app/src/main/java/com/github/ykocaman59bit/tirnavi/SplashActivity.java
+        package com.github.ykocaman59bit.tirnavi;
+
+        import android.Manifest;
+        import android.content.Intent;
+        import android.content.pm.PackageManager;
+        import android.os.Build;
+        import android.os.Bundle;
+        import android.os.Handler;
+        import android.os.Looper;
+        import android.view.animation.AlphaAnimation;
+        import android.view.animation.Animation;
+        import android.widget.ImageView;
+        import android.widget.LinearLayout;
+        import android.graphics.Color;
+
+        import androidx.annotation.NonNull;
+        import androidx.appcompat.app.AppCompatActivity;
+        import androidx.core.app.ActivityCompat;
+        import androidx.core.content.ContextCompat;
+
+        public class SplashActivity extends AppCompatActivity {
+
+            private static final int PERMISSION_REQUEST_CODE = 2002;
+
+            @Override
+            protected void onCreate(Bundle savedInstanceState) {
+                super.onCreate(savedInstanceState);
+
+                LinearLayout layout = new LinearLayout(this);
+                layout.setOrientation(LinearLayout.VERTICAL);
+                layout.setGravity(android.view.Gravity.CENTER);
+                layout.setBackgroundColor(Color.parseColor("#FFFFFF"));
+
+                ImageView logoView = new ImageView(this);
+                logoView.setImageResource(R.mipmap.ic_launcher);
+
+                LinearLayout.LayoutParams params =
+                        new LinearLayout.LayoutParams(300, 300);
+
+                logoView.setLayoutParams(params);
+                layout.addView(logoView);
+
+                setContentView(layout);
+
+                Animation fadeIn = new AlphaAnimation(0.0f, 1.0f);
+                fadeIn.setDuration(1000);
+                logoView.startAnimation(fadeIn);
+
+                // İzinleri kontrol et ve gerekirse iste
+                new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        checkAndRequestPermissions();
+                    }
+                }, 1500);
+            }
+
+            private void checkAndRequestPermissions() {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    String[] permissions;
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        permissions = new String[]{
+                                Manifest.permission.ACCESS_FINE_LOCATION,
+                                Manifest.permission.ACCESS_COARSE_LOCATION,
+                                Manifest.permission.RECORD_AUDIO,
+                                Manifest.permission.POST_NOTIFICATIONS
+                        };
+                    } else {
+                        permissions = new String[]{
+                                Manifest.permission.ACCESS_FINE_LOCATION,
+                                Manifest.permission.ACCESS_COARSE_LOCATION,
+                                Manifest.permission.RECORD_AUDIO
+                        };
+                    }
+
+                    boolean allGranted = true;
+                    for (String perm : permissions) {
+                        if (ContextCompat.checkSelfPermission(this, perm) != PackageManager.PERMISSION_GRANTED) {
+                            allGranted = false;
+                            break;
+                        }
+                    }
+
+                    if (!allGranted) {
+                        ActivityCompat.requestPermissions(this, permissions, PERMISSION_REQUEST_CODE);
+                        return;
+                    }
+                }
+
+                proceedToMain();
+            }
+
+            @Override
+            public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+                super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+                if (requestCode == PERMISSION_REQUEST_CODE) {
+                    proceedToMain();
+                }
+            }
+
+            private void proceedToMain() {
+                Intent intent = new Intent(SplashActivity.this, MainActivity.class);
+                startActivity(intent);
+                finish();
+            }
+        }
+        EOF
+
+
+        # ---------------------------------------------------------
+        # MAIN ACTIVITY
+        # ---------------------------------------------------------
+
+        cat << 'EOF' > app/src/main/java/com/github/ykocaman59bit/tirnavi/MainActivity.java
+        package com.github.ykocaman59bit.tirnavi;
+
+        import android.Manifest;
+        import android.content.pm.PackageManager;
+        import android.graphics.Color;
+        import android.net.Uri;
+        import android.os.Build;
+        import android.os.Bundle;
+        import android.webkit.PermissionRequest;
+        import android.webkit.WebChromeClient;
+        import android.webkit.WebResourceRequest;
+        import android.webkit.WebResourceResponse;
+        import android.webkit.WebSettings;
+        import android.webkit.WebView;
+        import android.webkit.WebViewClient;
+
+        import androidx.annotation.NonNull;
+        import androidx.appcompat.app.AppCompatActivity;
+        import androidx.webkit.WebViewAssetLoader;
+
+        public class MainActivity extends AppCompatActivity {
+
+            private WebView webView;
+            private static final int PERMISSION_REQUEST_CODE = 1001;
+            private PermissionRequest pendingPermissionRequest;
+            private WebViewAssetLoader assetLoader;
+
+            @Override
+            protected void onCreate(Bundle savedInstanceState) {
+                super.onCreate(savedInstanceState);
+
+                webView = new WebView(this);
+                webView.setBackgroundColor(Color.BLACK);
+
+                WebSettings webSettings = webView.getSettings();
+                webSettings.setJavaScriptEnabled(true);
+                webSettings.setDomStorageEnabled(true);
+                webSettings.setDatabaseEnabled(true);
+                webSettings.setGeolocationEnabled(true);
+                webSettings.setMediaPlaybackRequiresUserGesture(false);
+                webSettings.setAllowFileAccess(true);
+                webSettings.setAllowContentAccess(true);
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    webSettings.setMixedContentMode(
+                            WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
+                    );
+                }
+
+                assetLoader =
+                        new WebViewAssetLoader.Builder()
+                                .addPathHandler(
+                                        "/assets/",
+                                        new WebViewAssetLoader.AssetsPathHandler(this)
+                                )
+                                .build();
+
+                webView.setWebViewClient(
+                        new WebViewClient() {
+                            @Override
+                            public WebResourceResponse shouldInterceptRequest(
+                                    WebView view,
+                                    WebResourceRequest request
+                            ) {
+                                return assetLoader.shouldInterceptRequest(
+                                        request.getUrl()
+                                );
+                            }
+
+                            @Override
+                            @SuppressWarnings("deprecation")
+                            public WebResourceResponse shouldInterceptRequest(
+                                    WebView view,
+                                    String url
+                            ) {
+                                return assetLoader.shouldInterceptRequest(
+                                        Uri.parse(url)
+                                );
+                            }
+                        }
+                );
+
+                webView.setWebChromeClient(
+                        new WebChromeClient() {
+                            @Override
+                            public void onPermissionRequest(
+                                    final PermissionRequest request
+                            ) {
+                                runOnUiThread(
+                                        new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                String origin = request.getOrigin().toString();
+                                                boolean kendiUygulamamiz =
+                                                        origin.startsWith(
+                                                                "https://appassets.androidplatform.net"
+                                                        );
+
+                                                if (!kendiUygulamamiz) {
+                                                    request.deny();
+                                                    return;
+                                                }
+
+                                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                                    if (checkSelfPermission(
+                                                            Manifest.permission.RECORD_AUDIO
+                                                    ) != PackageManager.PERMISSION_GRANTED) {
+                                                        
+                                                        pendingPermissionRequest = request;
+                                                        requestPermissions(
+                                                                new String[]{
+                                                                        Manifest.permission.RECORD_AUDIO
+                                                                },
+                                                                PERMISSION_REQUEST_CODE
+                                                        );
+                                                        return;
+                                                    }
+                                                }
+
+                                                request.grant(
+                                                        new String[]{
+                                                                PermissionRequest.RESOURCE_AUDIO_CAPTURE
+                                                        }
+                                                );
+                                            }
+                                        }
+                                );
+                            }
+
+                            @Override
+                            public void onGeolocationPermissionsShowPrompt(String origin, android.webkit.GeolocationPermissions.Callback callback) {
+                                callback.invoke(origin, true, false);
+                            }
+                        }
+                );
+
+                WebView.setWebContentsDebuggingEnabled(true);
+
+                webView.loadUrl(
+                        "https://appassets.androidplatform.net/assets/index.html"
+                );
+
+                setContentView(webView);
+            }
+
+            @Override
+            public void onRequestPermissionsResult(
+                    int requestCode,
+                    @NonNull String[] permissions,
+                    @NonNull int[] grantResults
+            ) {
+                super.onRequestPermissionsResult(
+                        requestCode,
+                        permissions,
+                        grantResults
+                );
+
+                if (requestCode == PERMISSION_REQUEST_CODE) {
+                    if (pendingPermissionRequest != null) {
+                        boolean izinVerildi = grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED;
+
+                        if (izinVerildi) {
+                            pendingPermissionRequest.grant(
+                                    new String[]{
+                                            PermissionRequest.RESOURCE_AUDIO_CAPTURE
+                                    }
+                            );
+                        } else {
+                            pendingPermissionRequest.deny();
+                        }
+                        pendingPermissionRequest = null;
+                    }
+                }
+            }
+
+            @Override
+            public void onBackPressed() {
+                if (webView != null && webView.canGoBack()) {
+                    webView.goBack();
+                } else {
+                    super.onBackPressed();
+                }
+            }
+
+            @Override
+            protected void onDestroy() {
+                if (webView != null) {
+                    webView.stopLoading();
+                    webView.destroy();
+                    webView = null;
+                }
+                super.onDestroy();
+            }
+        }
+        EOF
+
+
+        # ---------------------------------------------------------
+        # ROOT BUILD.GRADLE
+        # ---------------------------------------------------------
+
+        cat << 'EOF' > build.gradle
+        buildscript {
+            repositories {
+                google()
+                mavenCentral()
+            }
+            dependencies {
+                classpath 'com.android.tools.build:gradle:7.4.2'
+            }
+        }
+
+        allprojects {
+            repositories {
+                google()
+                mavenCentral()
+            }
+        }
+
+        task clean(type: Delete) {
+            delete rootProject.buildDir
+        }
+        EOF
+
+
+        # ---------------------------------------------------------
+        # SETTINGS.GRADLE
+        # ---------------------------------------------------------
+
+        cat << 'EOF' > settings.gradle
+        rootProject.name = "TIRNAV"
+
+        include ':app'
+        EOF
+
+
+        # ---------------------------------------------------------
+        # APP BUILD.GRADLE
+        # ---------------------------------------------------------
+
+        cat << 'EOF' > app/build.gradle
+        plugins {
+            id 'com.android.application'
+        }
+
+        android {
+            namespace 'com.github.ykocaman59bit.tirnavi'
+
+            compileSdk 33
+
+            defaultConfig {
+                applicationId "com.github.ykocaman59bit.tirnavi"
+                minSdk 24
+                targetSdk 33
+                versionCode 1
+                versionName "1.0.0"
+            }
+
+            buildTypes {
+                release {
+                    minifyEnabled false
+                }
+            }
+
+            compileOptions {
+                sourceCompatibility JavaVersion.VERSION_11
+                targetCompatibility JavaVersion.VERSION_11
+            }
+        }
+
+        dependencies {
+            implementation 'androidx.appcompat:appcompat:1.6.1'
+            implementation 'com.google.android.material:material:1.9.0'
+            implementation 'androidx.webkit:webkit:1.7.0'
+        }
+        EOF
+
+
+        # ---------------------------------------------------------
+        # GRADLE PROPERTIES
+        # ---------------------------------------------------------
+
+        cat << 'EOF' > gradle.properties
+        org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
+        android.useAndroidX=true
+        android.enableJetifier=true
+        EOF
+
+
+        # ---------------------------------------------------------
+        # LOGO
+        # ---------------------------------------------------------
+
+        sudo apt-get update
+        sudo apt-get install -y librsvg2-bin
+
+        rsvg-convert \
+          -w 192 \
+          -h 192 \
+          icon.svg \
+          -o app/src/main/res/mipmap-hdpi/ic_launcher.png
+
+        cp \
+          app/src/main/res/mipmap-hdpi/ic_launcher.png \
+          app/src/main/res/mipmap-hdpi/ic_launcher_round.png
+
+
+        # ---------------------------------------------------------
+        # APK DERLE
+        # ---------------------------------------------------------
+
+        gradle assembleDebug --no-daemon
+
+
+        # ---------------------------------------------------------
+        # APK ADI
+        # ---------------------------------------------------------
+
+        cp \
+          app/build/outputs/apk/debug/app-debug.apk \
+          app/build/outputs/apk/debug/TIRNAV.apk
+
+
+    # -----------------------------------------------------------
+    # APK'YI GITHUB ACTIONS ARTIFACT OLARAK KAYDET
+    # -----------------------------------------------------------
+
+    - name: APK Dosyasını Kaydet
+      uses: actions/upload-artifact@v4
+      with:
+        name: TIRNAV
+        path: app/build/outputs/apk/debug/TIRNAV.apk
+        if-no-files-found: error
+        retention-days: 1
