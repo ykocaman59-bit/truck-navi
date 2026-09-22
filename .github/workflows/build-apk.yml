@@ -29,16 +29,13 @@ jobs:
 
       - name: Android Manifest ve İzinleri Düzenle
         run: |
-          # AndroidManifest.xml dosyasına gerekli izinleri ve TIRNAV etiketini ekleyelim
           MANIFEST_PATH="android/app/src/main/AndroidManifest.xml"
           
           if [ -f "$MANIFEST_PATH" ]; then
             echo "AndroidManifest.xml bulundu, izinler ve uygulama adı güncelleniyor..."
             
-            # Uygulama adını TIRNAV olarak ayarlıyoruz ve izinleri ekliyoruz
             sed -i 's/android:label="[^"]*"/android:label="TIRNAV"/g' $MANIFEST_PATH
             
-            # İzinlerin eksik olanlarını ekleyelim (Eğer yoksa)
             if ! grep -q "ACCESS_FINE_LOCATION" "$MANIFEST_PATH"; then
               sed -i '/<uses-permission android:name="android.permission.INTERNET"/a \    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />\n    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />\n    <uses-permission android:name="android.permission.RECORD_AUDIO" />\n    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />' $MANIFEST_PATH
             fi
@@ -58,7 +55,7 @@ jobs:
           cp build/app/outputs/flutter-apk/app-release.apk output/TIRNAV.apk
 
       - name: APK Dosyasını Kaydet (Artifacts)
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: TIRNAV
           path: output/TIRNAV.apk
